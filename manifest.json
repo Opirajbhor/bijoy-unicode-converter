@@ -1,0 +1,19 @@
+{
+  "name": "Unicode ↔ Bijoy Converter",
+  "short_name": "Bijoy",
+  "description": "Convert Unicode Bengali ↔ Bijoy (SutonnyMJ) with spell check",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fd",
+  "theme_color": "#2f6bff",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/external-flatarticons-blue-flatarticons/65/external-bangala-bangladesh-independence-day-flatarticons-blue-flatarticons.png",
+      "sizes": "65x65",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
