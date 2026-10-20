@@ -4,18 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Unicode ↔ Bijoy Converter</title>
+<link rel="icon" type="image/png" href="https://img.icons8.com/external-flatarticons-blue-flatarticons/65/external-bangala-bangladesh-independence-day-flatarticons-blue-flatarticons.png">
 <style>
   @font-face{
     font-family: 'SutonnyMJ';
-    src: url('https://cdn.jsdelivr.net/gh/Dyrimon/bangla_fonts@main/proprietary/Sutonny/SutonnyMJ_Regular.ttf') format('truetype'),
-         url('https://raw.githubusercontent.com/Dyrimon/bangla_fonts/main/proprietary/Sutonny/SutonnyMJ_Regular.ttf') format('truetype');
+    src: url('https://cdn.jsdelivr.net/gh/Dyrimon/bangla_fonts@main/proprietary/Sutonny/SutonnyMJ_Regular.ttf') format('truetype');
     font-weight: normal; font-style: normal; font-display: swap;
   }
   :root{
     --ink:#132033; --muted:#6b7c93; --line:#e3e9f2; --card:#ffffff;
     --accent:#2f6bff; --accent-dark:#1f4fd8;
     --warn:#e67e22; --err:#d63b3b; --ok:#137a45;
-    --bijoy-font: 'SutonnyMJ', 'Sutonny MJ', monospace;
+    --bijoy-font: 'SutonnyMJ', monospace;
   }
   *{box-sizing:border-box;}
   body{
@@ -29,208 +29,147 @@
   }
   .wrap{max-width:1100px;margin:0 auto;}
   header{text-align:center;margin-bottom:20px;}
-  h1{margin:0 0 6px;font-size:clamp(1.3rem,3vw,1.75rem);font-weight:700;letter-spacing:-.02em;}
+  h1{margin:0 0 6px;font-size:clamp(1.3rem,3vw,1.75rem);font-weight:700;letter-spacing:-.02em;
+    display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+  h1 .logo{width:34px;height:34px;}
   h1 span{color:var(--accent);}
   header p{margin:0;color:var(--muted);font-size:.9rem;}
 
-  .dir-toggle{
-    display:flex;justify-content:center;gap:0;margin:0 auto 14px;
-    border:1px solid var(--line);border-radius:12px;overflow:hidden;
-    width:fit-content;background:#fff;box-shadow:0 6px 16px -12px rgba(19,32,51,.3);
-  }
-  .dir-toggle button{
-    background:transparent;border:0;font:inherit;font-weight:600;
-    font-size:.88rem;padding:10px 22px;cursor:pointer;color:var(--muted);
-    transition:.15s ease;
-  }
+  .dir-toggle{display:flex;justify-content:center;margin:0 auto 14px;
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;width:fit-content;
+    background:#fff;box-shadow:0 6px 16px -12px rgba(19,32,51,.3);}
+  .dir-toggle button{background:transparent;border:0;font:inherit;font-weight:600;
+    font-size:.88rem;padding:10px 22px;cursor:pointer;color:var(--muted);}
   .dir-toggle button.active{background:var(--accent);color:#fff;}
-  .dir-toggle button:not(.active):hover{background:#f2f6ff;color:var(--ink);}
 
-  .topbar{
-    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-    gap:8px;margin:0 auto 18px;max-width:960px;
-    padding:10px 14px;background:rgba(255,255,255,.8);
-    border:1px solid var(--line);border-radius:12px;
-  }
-  .topbar button{
-    background:#fff;border:1px solid var(--line);font:inherit;
-    font-size:.8rem;font-weight:600;padding:7px 14px;border-radius:8px;
-    cursor:pointer;transition:.15s;color:var(--ink);
-  }
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:8px;margin:0 auto 18px;max-width:960px;padding:10px 14px;
+    background:rgba(255,255,255,.8);border:1px solid var(--line);border-radius:12px;}
+  .topbar button{background:#fff;border:1px solid var(--line);font:inherit;
+    font-size:.8rem;font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer;color:var(--ink);}
   .topbar button:hover{border-color:#c3d2ea;background:#f7faff;}
   .topbar button.on{background:var(--ok);color:#fff;border-color:var(--ok);}
   .topbar button.danger{border-color:#f0c0c0;color:var(--err);}
-  .topbar button.danger:hover{background:#fde8e8;}
-  .topbar .status{
-    font-size:.75rem;font-weight:600;color:var(--muted);
-    padding:5px 11px;border-radius:99px;background:#eef3ff;color:#3a5bbf;
-  }
+  .topbar button.dict-btn{background:#f4f0ff;border-color:#d8c8f5;color:#5a3fb8;}
+  .topbar .status{font-size:.75rem;font-weight:600;padding:5px 11px;border-radius:99px;
+    background:#eef3ff;color:#3a5bbf;}
   .topbar .status.ok{background:#e3f8ec;color:var(--ok);}
   .topbar .status.warn{background:#fff3e0;color:#a35b00;}
   .topbar .status.loading{background:#eef3ff;color:#3a5bbf;}
 
+  /* diagnostic panel */
+  .diag{
+    max-width:960px;margin:0 auto 14px;
+    background:#fff8e6;border:1px solid #ffd98a;border-radius:10px;
+    padding:10px 14px;font-size:.8rem;color:#7a5800;
+    font-family:Consolas,monospace;display:none;white-space:pre-wrap;
+  }
+  .diag.show{display:block;}
+  .diag b{color:#4a3600;}
+
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  @media (max-width:780px){ .grid{grid-template-columns:1fr;} }
-
-  .panel{
-    background:var(--card);border:1px solid var(--line);border-radius:14px;
-    box-shadow:0 12px 32px -20px rgba(19,32,51,.4);overflow:hidden;
-    display:flex;flex-direction:column;
-  }
-  .panel-head{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:11px 15px;border-bottom:1px solid var(--line);
-    background:linear-gradient(#fbfdff,#f5f8fd);
-    font-size:.75rem;font-weight:700;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--muted);
-  }
-  .panel-head-left{display:flex;align-items:center;gap:8px;}
-  .panel-head-right{display:flex;align-items:center;gap:8px;}
-
-  .icon-btn{
-    background:transparent;border:1px solid var(--line);border-radius:6px;
+  @media (max-width:780px){.grid{grid-template-columns:1fr;}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 12px 32px -20px rgba(19,32,51,.4);overflow:hidden;display:flex;flex-direction:column;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 15px;border-bottom:1px solid var(--line);background:linear-gradient(#fbfdff,#f5f8fd);
+    font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .panel-head-left,.panel-head-right{display:flex;align-items:center;gap:8px;}
+  .icon-btn{background:transparent;border:1px solid var(--line);border-radius:6px;
     width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;color:var(--muted);transition:.15s;padding:0;
-  }
+    cursor:pointer;color:var(--muted);padding:0;}
   .icon-btn:hover{background:#f2f6ff;border-color:#c3d2ea;color:var(--accent);}
   .icon-btn svg{width:14px;height:14px;}
-
-  .badge{
-    font-size:.7rem;font-weight:600;letter-spacing:0;text-transform:none;
-    background:#eef3ff;color:#3a5bbf;padding:3px 9px;border-radius:99px;
-    white-space:nowrap;
-  }
+  .badge{font-size:.7rem;font-weight:600;background:#eef3ff;color:#3a5bbf;
+    padding:3px 9px;border-radius:99px;white-space:nowrap;}
   .badge.err{background:#fde8e8;color:var(--err);}
   .badge.ok{background:#e3f8ec;color:var(--ok);}
 
-  textarea{
-    border:0;outline:0;resize:none;width:100%;height:560px;
-    padding:15px;font-size:1.02rem;line-height:1.85;
-    color:var(--ink);background:transparent;
-    font-family:"Noto Sans Bengali","Kalpurush","SolaimanLipi","Nirmala UI",sans-serif;
-    overflow-y:auto;
-  }
-  .output-view{
-    height:560px;overflow-y:auto;
-    padding:15px;
-    background:transparent;overflow-wrap:break-word;
-    white-space:pre-wrap;word-break:break-word;
-    font-family:var(--bijoy-font);
-    font-size:1.35rem;line-height:2.05;
-    color:#08243f;
-  }
-  .output-view.raw{
-    font-family:"Consolas","SFMono-Regular",Menlo,monospace;
-    font-size:1rem;line-height:1.85;
-    color:#0f2a4a;
-  }
-  .output-view .flagged{
-    text-decoration:underline;text-decoration-style:wavy;
-    text-decoration-color:var(--err);text-decoration-thickness:1.5px;
-    background:#fde8e8;border-radius:3px;padding:0 1px;
-    cursor:pointer;transition:.15s;
-  }
+  textarea{border:0;outline:0;resize:none;width:100%;height:520px;padding:15px;
+    font-size:1.02rem;line-height:1.85;color:var(--ink);background:transparent;
+    font-family:"Noto Sans Bengali","Kalpurush","SolaimanLipi","Nirmala UI",sans-serif;}
+  .output-view{height:520px;overflow-y:auto;padding:15px;overflow-wrap:break-word;
+    white-space:pre-wrap;word-break:break-word;font-family:var(--bijoy-font);
+    font-size:1.35rem;line-height:2.05;color:#08243f;}
+  .output-view.raw{font-family:"Consolas",monospace;font-size:1rem;line-height:1.85;color:#0f2a4a;}
+  .output-view .flagged{text-decoration:underline;text-decoration-style:wavy;
+    text-decoration-color:var(--err);text-decoration-thickness:1.5px;background:#fde8e8;
+    border-radius:3px;padding:0 1px;cursor:pointer;}
   .output-view .flagged:hover{background:#fbd5d5;}
-  .output-view .flagged.highlight{
-    background:#ffe680;outline:2px solid var(--warn);outline-offset:1px;
-  }
 
-  .word-tooltip{
-    position:fixed;
-    background:#fff;border:1px solid var(--line);border-radius:10px;
-    box-shadow:0 8px 24px -8px rgba(19,32,51,.35);
-    padding:8px;display:none;z-index:100;
-    font-family:"Segoe UI",system-ui,sans-serif;
-    font-size:.8rem;min-width:220px;
-  }
+  .word-tooltip{position:fixed;background:#fff;border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 8px 24px -8px rgba(19,32,51,.35);padding:8px;display:none;z-index:100;
+    font-size:.8rem;min-width:220px;max-width:calc(100vw - 16px);}
   .word-tooltip.show{display:block;}
-  .word-tooltip .tooltip-pair{
-    display:flex;flex-direction:column;gap:3px;margin-bottom:6px;
-  }
-  .word-tooltip .tooltip-row{
-    display:flex;align-items:center;gap:6px;
-    font-family:"Consolas",monospace;font-size:.78rem;
-  }
-  .word-tooltip .tooltip-label{
-    font-family:"Segoe UI",sans-serif;font-size:.68rem;
-    color:var(--muted);font-weight:600;min-width:42px;
-  }
-  .word-tooltip .tooltip-val{
-    color:#0f2a4a;background:#f2f6ff;padding:3px 7px;
-    border-radius:5px;flex:1;word-break:break-all;
-    overflow:hidden;text-overflow:ellipsis;
-  }
+  .word-tooltip .tooltip-row{display:flex;align-items:center;gap:6px;
+    font-family:Consolas,monospace;font-size:.78rem;margin-bottom:3px;}
+  .word-tooltip .tooltip-label{font-size:.68rem;color:var(--muted);font-weight:600;min-width:42px;}
+  .word-tooltip .tooltip-val{color:#0f2a4a;background:#f2f6ff;padding:3px 7px;
+    border-radius:5px;flex:1;word-break:break-all;}
   .word-tooltip .tooltip-val.bijoy{font-family:var(--bijoy-font);font-size:.95rem;}
-  .word-tooltip button{
-    width:100%;font:inherit;font-size:.78rem;font-weight:600;
-    padding:6px 10px;border-radius:6px;border:0;cursor:pointer;
-    background:var(--accent);color:#fff;transition:.15s;
-  }
+  .word-tooltip button{width:100%;font:inherit;font-size:.78rem;font-weight:600;
+    padding:7px 10px;border-radius:6px;border:0;cursor:pointer;background:var(--accent);
+    color:#fff;margin-top:6px;}
   .word-tooltip button:hover{background:var(--accent-dark);}
-  .word-tooltip .tooltip-hint{
-    font-size:.68rem;color:var(--muted);margin-top:6px;text-align:center;
-  }
 
-  .error-panel{
-    margin:14px 0 0;background:#fff;border:1px solid var(--line);
-    border-radius:12px;overflow:hidden;
-  }
-  .error-panel summary{
-    padding:12px 16px;cursor:pointer;font-size:.85rem;font-weight:700;
-    list-style:none;display:flex;align-items:center;gap:8px;
-    color:var(--ink);user-select:none;
-  }
-  .error-panel summary::-webkit-details-marker{display:none;}
-  .error-panel summary::before{
-    content:"▸";display:inline-block;transition:.2s;color:var(--muted);
-  }
-  .error-panel[open] summary::before{transform:rotate(90deg);}
-  .error-panel summary:hover{background:#f7faff;}
-  .error-panel .count{
-    background:#fde8e8;color:var(--err);font-size:.72rem;
-    padding:2px 8px;border-radius:99px;font-weight:700;
-  }
-  .error-panel .count.zero{background:#e3f8ec;color:var(--ok);}
-  .error-list{
-    list-style:none;margin:0;padding:0;max-height:280px;overflow-y:auto;
-    border-top:1px solid var(--line);
-  }
-  .error-list li{
-    display:flex;align-items:center;gap:10px;
-    padding:10px 16px;border-bottom:1px solid #f2f5fa;
-    font-size:.85rem;cursor:pointer;transition:.12s;
-  }
-  .error-list li:last-child{border-bottom:0;}
+  .error-panel,.dict-panel{margin:14px 0 0;background:#fff;border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;}
+  .error-panel summary,.dict-panel summary{padding:12px 16px;cursor:pointer;
+    font-size:.85rem;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px;
+    color:var(--ink);user-select:none;}
+  .error-panel summary::-webkit-details-marker,.dict-panel summary::-webkit-details-marker{display:none;}
+  .error-panel summary::before,.dict-panel summary::before{content:"▸";
+    display:inline-block;transition:.2s;color:var(--muted);}
+  .error-panel[open] summary::before,.dict-panel[open] summary::before{transform:rotate(90deg);}
+  .error-panel .count,.dict-panel .count{background:#fde8e8;color:var(--err);
+    font-size:.72rem;padding:2px 8px;border-radius:99px;font-weight:700;}
+  .error-panel .count.zero,.dict-panel .count.zero{background:#e3f8ec;color:var(--ok);}
+  .dict-panel .count{background:#f4f0ff;color:#5a3fb8;}
+  .dict-panel .count.zero{background:#f2f4f8;color:#8896a8;}
+  .dict-actions{display:flex;justify-content:flex-end;gap:8px;
+    padding:10px 16px;border-top:1px solid var(--line);background:#fbfdff;}
+  .dict-actions button{font:inherit;font-size:.75rem;font-weight:600;padding:5px 12px;
+    border-radius:6px;background:#fff;border:1px solid var(--line);color:var(--ink);cursor:pointer;}
+  .dict-actions button.danger{border-color:#f0c0c0;color:var(--err);}
+  .error-list,.dict-list{list-style:none;margin:0;padding:0;max-height:280px;overflow-y:auto;
+    border-top:1px solid var(--line);}
+  .error-list li,.dict-list li{display:flex;align-items:center;gap:10px;padding:10px 16px;
+    border-bottom:1px solid #f2f5fa;font-size:.85rem;}
+  .error-list li{cursor:pointer;}
   .error-list li:hover{background:#f9fbff;}
-  .error-list .word{
-    font-family:"Consolas",monospace;color:#0f2a4a;
-    background:#f2f6ff;padding:3px 8px;border-radius:6px;
-    font-size:.82rem;flex-shrink:0;
-  }
+  .error-list .word,.dict-list .dict-uni{font-family:Consolas,monospace;background:#f2f6ff;
+    padding:3px 8px;border-radius:6px;font-size:.82rem;word-break:break-all;}
   .error-list .word.bijoy{font-family:var(--bijoy-font);font-size:1rem;}
+  .dict-list .dict-uni{font-family:"Noto Sans Bengali",sans-serif;font-size:.9rem;}
+  .dict-list .dict-bijoy{font-family:var(--bijoy-font);font-size:1.1rem;
+    background:#f2f6ff;padding:3px 8px;border-radius:6px;color:#08243f;word-break:break-all;}
+  .dict-list .dict-del{margin-left:auto;background:transparent;border:1px solid var(--line);
+    color:var(--muted);border-radius:6px;width:26px;height:26px;cursor:pointer;padding:0;}
+  .dict-list .dict-del:hover{background:#fde8e8;color:var(--err);}
   .error-list .msg{color:var(--muted);flex:1;}
-  .error-list .add-dict{
-    font-size:.72rem;font-weight:600;padding:5px 10px;
-    background:#fff;color:var(--accent);border:1px solid var(--accent);
-    border-radius:6px;cursor:pointer;flex-shrink:0;
-    transition:.15s;
-  }
+  .error-list .add-dict{font-size:.72rem;font-weight:600;padding:5px 10px;background:#fff;
+    color:var(--accent);border:1px solid var(--accent);border-radius:6px;cursor:pointer;}
   .error-list .add-dict:hover{background:var(--accent);color:#fff;}
 
-  .toast{
-    position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);
-    background:#132033;color:#fff;padding:10px 22px;border-radius:99px;
-    font-size:.85rem;opacity:0;pointer-events:none;transition:.25s ease;
-    box-shadow:0 12px 30px -12px rgba(0,0,0,.5);z-index:50;
-    max-width:80vw;text-align:center;
-  }
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);
+    background:#132033;color:#fff;padding:10px 22px;border-radius:99px;font-size:.85rem;
+    opacity:0;pointer-events:none;transition:.25s ease;z-index:50;max-width:calc(100vw - 32px);
+    text-align:center;display:flex;align-items:center;gap:12px;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
+  .toast-action{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);
+    color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:5px 12px;
+    border-radius:99px;cursor:pointer;}
+
+  #dictFileInput{display:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Unicode <span>↔</span> Bijoy Converter</h1>
+    <h1>
+      <img class="logo" src="https://img.icons8.com/external-flatarticons-blue-flatarticons/65/external-bangala-bangladesh-independence-day-flatarticons-blue-flatarticons.png" alt="বাংলা">
+      Unicode <span>↔</span> Bijoy Converter
+    </h1>
     <p>দুই দিকেই রূপান্তর · বানান যাচাই · ভুল চিহ্নিতকরণ</p>
   </header>
 
@@ -243,22 +182,21 @@
     <button id="lightBtn" type="button">Light Check</button>
     <button id="deepBtn" type="button">Deep Check</button>
     <button id="offBtn" type="button" class="on">Off</button>
+    <button id="loadFileBtn" type="button" class="dict-btn">📁 Load Word List</button>
+    <button id="dictBtn" type="button" class="dict-btn">My Dictionary <span id="dictBtnCount">(0)</span></button>
     <button id="clearBtn" type="button" class="danger">Clear</button>
     <span id="dictStatus" class="status">Spell check off</span>
   </div>
 
+  <div class="diag" id="diag"></div>
+
   <main class="grid">
     <section class="panel">
       <div class="panel-head">
-        <div class="panel-head-left">
-          <span id="inLabel">Unicode Input</span>
-        </div>
+        <div class="panel-head-left"><span id="inLabel">Unicode Input</span></div>
         <div class="panel-head-right">
           <button class="icon-btn" id="copyInBtn" title="Copy input" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
           <span class="badge" id="inCount">0 chars</span>
         </div>
@@ -268,15 +206,10 @@
 
     <section class="panel">
       <div class="panel-head">
-        <div class="panel-head-left">
-          <span id="outLabel">Bijoy Output</span>
-        </div>
+        <div class="panel-head-left"><span id="outLabel">Bijoy Output</span></div>
         <div class="panel-head-right">
           <button class="icon-btn" id="copyOutBtn" title="Copy output" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
           <span class="badge ok" id="errBadge">Clean</span>
           <span class="badge" id="outCount">0 chars</span>
@@ -287,829 +220,615 @@
   </main>
 
   <details class="error-panel" id="errorPanel" open>
-    <summary>
-      Flagged words <span class="count zero" id="errCount">0</span>
-    </summary>
+    <summary>Flagged words <span class="count zero" id="errCount">0</span></summary>
     <ul class="error-list" id="errorList">
-      <li style="justify-content:center;color:#8896a8;cursor:default;">
-        No flagged words. Enable spell check to detect unknown words.
-      </li>
+      <li style="justify-content:center;color:#8896a8;cursor:default;">No flagged words. Enable spell check to detect unknown words.</li>
+    </ul>
+  </details>
+
+  <details class="dict-panel" id="dictPanel">
+    <summary>My Dictionary <span class="count zero" id="dictCount">0</span></summary>
+    <div class="dict-actions">
+      <button id="clearAllDictBtn" class="danger" type="button">Clear all</button>
+    </div>
+    <ul class="dict-list" id="dictList">
+      <li style="justify-content:center;color:#8896a8;">No saved words yet.</li>
     </ul>
   </details>
 </div>
 
 <div class="word-tooltip" id="wordTooltip">
-  <div class="tooltip-pair">
-    <div class="tooltip-row">
-      <span class="tooltip-label">Unicode</span>
-      <span class="tooltip-val" id="tooltipUni">—</span>
-    </div>
-    <div class="tooltip-row">
-      <span class="tooltip-label">Bijoy</span>
-      <span class="tooltip-val bijoy" id="tooltipBijoy">—</span>
-    </div>
-  </div>
+  <div class="tooltip-row"><span class="tooltip-label">Unicode</span><span class="tooltip-val" id="tooltipUni">—</span></div>
+  <div class="tooltip-row"><span class="tooltip-label">Bijoy</span><span class="tooltip-val bijoy" id="tooltipBijoy">—</span></div>
   <button type="button" id="addToDictBtn">Add both to dictionary</button>
-  <div class="tooltip-hint">won't be flagged again in either direction</div>
 </div>
 
-<div class="toast" id="toast">Copied!</div>
+<div class="toast" id="toast">
+  <span id="toastMsg">Copied!</span>
+  <button class="toast-action" id="toastActionBtn" type="button" style="display:none">Undo</button>
+</div>
+
+<input type="file" id="dictFileInput" accept=".txt,.csv">
 
 <script type="module">
 /* ================================================================
-   nspell loader
+   Safe localStorage
    ================================================================ */
-let nspellLib = null;
-async function loadNspell() {
-  if (nspellLib) return nspellLib;
-  const mod = await import("https://esm.sh/nspell@2.1.5");
-  nspellLib = mod.default || mod;
-  return nspellLib;
+function lsGet(k, f) { try { const v = localStorage.getItem(k); return v === null ? f : v; } catch(e){ return f; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch(e){ return false; } }
+
+/* ================================================================
+   Diagnostic display
+   ================================================================ */
+const diagEl = document.getElementById("diag");
+const diagLines = [];
+function diag(msg) {
+  const time = new Date().toLocaleTimeString();
+  diagLines.push(`[${time}] ${msg}`);
+  diagEl.textContent = diagLines.join("\n");
+  diagEl.classList.add("show");
+  console.log("[DICT]", msg);
+}
+function diagClear() {
+  diagLines.length = 0;
+  diagEl.textContent = "";
+  diagEl.classList.remove("show");
 }
 
 /* ================================================================
    Constants
    ================================================================ */
-const HASANTA = "\u09CD";
-const I_KAR   = "\u09BF";
-const E_KAR   = "\u09C7";
-const OI_KAR  = "\u09C8";
-const O_KAR   = "\u09CB";
-const AU_KAR  = "\u09CC";
+const HASANTA="\u09CD",I_KAR="\u09BF",E_KAR="\u09C7",OI_KAR="\u09C8",O_KAR="\u09CB",AU_KAR="\u09CC";
 
-/* ================================================================
-   Base map
-   ================================================================ */
 const BASE = {
-  "অ":"A","আ":"Av","ই":"B","ঈ":"C","উ":"D","ঊ":"E","ঋ":"F",
-  "এ":"G","ঐ":"H","ও":"I","ঔ":"J",
-  "ক":"K","খ":"L","গ":"M","ঘ":"N","ঙ":"O",
-  "চ":"P","ছ":"Q","জ":"R","ঝ":"S","ঞ":"T",
-  "ট":"U","ঠ":"V","ড":"W","ঢ":"X","ণ":"Y",
-  "ত":"Z","থ":"_","দ":"`","ধ":"a","ন":"b",
-  "প":"c","ফ":"d","ব":"e","ভ":"f","ম":"g",
-  "য":"h","র":"i","ল":"j","শ":"k","ষ":"l",
-  "স":"m","হ":"n",
-  "\u09DC":"o","\u09DD":"p","\u09DF":"q","\u09CE":"r",
-  "ং":"s","ঃ":"t","ঁ":"u"
+  "অ":"A","আ":"Av","ই":"B","ঈ":"C","উ":"D","ঊ":"E","ঋ":"F","এ":"G","ঐ":"H","ও":"I","ঔ":"J",
+  "ক":"K","খ":"L","গ":"M","ঘ":"N","ঙ":"O","চ":"P","ছ":"Q","জ":"R","ঝ":"S","ঞ":"T",
+  "ট":"U","ঠ":"V","ড":"W","ঢ":"X","ণ":"Y","ত":"Z","থ":"_","দ":"`","ধ":"a","ন":"b",
+  "প":"c","ফ":"d","ব":"e","ভ":"f","ম":"g","য":"h","র":"i","ল":"j","শ":"k","ষ":"l",
+  "স":"m","হ":"n","\u09DC":"o","\u09DD":"p","\u09DF":"q","\u09CE":"r","ং":"s","ঃ":"t","ঁ":"u"
 };
-
 const CONS_SET = new Set([
-  "ক","খ","গ","ঘ","ঙ","চ","ছ","জ","ঝ","ঞ",
-  "ট","ঠ","ড","ঢ","ণ","ত","থ","দ","ধ","ন",
-  "প","ফ","ব","ভ","ম","য","র","ল","শ","ষ",
-  "স","হ","\u09CE","\u09DC","\u09DD","\u09DF"
+  "ক","খ","গ","ঘ","ঙ","চ","ছ","জ","ঝ","ঞ","ট","ঠ","ড","ঢ","ণ","ত","থ","দ","ধ","ন",
+  "প","ফ","ব","ভ","ম","য","র","ল","শ","ষ","স","হ","\u09CE","\u09DC","\u09DD","\u09DF"
 ]);
-
 const VOWEL = { "া":"v", "ী":"x", "ু":"y", "ূ":"~", "ৃ":"…" };
+const DIGIT = { "০":"0","১":"1","২":"2","৩":"3","৪":"4","৫":"5","৬":"6","৭":"7","৮":"8","৯":"9" };
 
-const DIGIT = {
-  "০":"0","১":"1","২":"2","৩":"3","৪":"4",
-  "৫":"5","৬":"6","৭":"7","৮":"8","৯":"9"
-};
-
-/* ================================================================
-   Ligatures
-   ================================================================ */
 const LIG = {
-  "ক্ক":"\u00B0","ক্ট":"\u00B1","ক্ত":"\u00B3",
-  "ক্থ":"K&_","ক্দ":"K&`","ক্ন":"K\u00E8",
-  "ক্ব":"K\u00A1","ক্ম":"K\u00A5","ক্য":"K\u00A8",
-  "ক্র":"\u00B5","ক্ল":"K\u00AC","ক্ষ":"\u00B6","ক্স":"\u00B7",
+  "ক্ক":"\u00B0","ক্ট":"\u00B1","ক্ত":"\u00B3","ক্থ":"K&_","ক্দ":"K&`","ক্ন":"K\u00E8",
+  "ক্ব":"K\u00A1","ক্ম":"K\u00A5","ক্য":"K\u00A8","ক্র":"\u00B5","ক্ল":"K\u00AC","ক্ষ":"\u00B6","ক্স":"\u00B7",
   "খ্য":"L\u00A8","খ্র":"L\u00AA",
-  "গ্গ":"M&M","গ্ণ":"M&Y","গ্ধ":"\u00BB","গ্ন":"M\u0153",
-  "গ্ব":"M\u00A6","গ্ম":"M\u00A5","গ্য":"M\u00A8","গ্র":"M\u00AA","গ্ল":"M\u00F8",
+  "গ্গ":"M&M","গ্ণ":"M&Y","গ্ধ":"\u00BB","গ্ন":"M\u0153","গ্ব":"M\u00A6","গ্ম":"M\u00A5","গ্য":"M\u00A8","গ্র":"M\u00AA","গ্ল":"M\u00F8",
   "ঘ্ন":"N\u0153","ঘ্য":"N\u00A8","ঘ্র":"N\u00AA",
   "ঙ্ক":"\u00BC","ঙ্খ":"\u2022L","ঙ্গ":"\u00BD","ঙ্ঘ":"\u2022N","ঙ্ম":"\u2022g",
   "চ্চ":"\u201DP","চ্ছ":"\u201DQ","চ্ঞ":"\u201DT","চ্য":"P\u00A8","চ্র":"P\u00AA",
   "ছ্য":"Q\u00A8","ছ্র":"Q\u00AA",
-  "জ্জ":"\u00BE","জ্ঝ":"\u00C0","জ্ঞ":"\u00C1",
-  "জ্ব":"R\u00A1","জ্য":"R\u00A8","জ্র":"R\u00AA",
+  "জ্জ":"\u00BE","জ্ঝ":"\u00C0","জ্ঞ":"\u00C1","জ্ব":"R\u00A1","জ্য":"R\u00A8","জ্র":"R\u00AA",
   "ঝ্য":"S\u00A8",
   "ঞ্চ":"\u00C2","ঞ্ছ":"\u00C3","ঞ্জ":"\u00C4","ঞ্ঝ":"\u00C5",
   "ট্ট":"\u00C6","ট্য":"U\u00A8","ট্র":"U\u00AA",
   "ঠ্ঠ":"V&V","ঠ্য":"V\u00A8",
   "ড্ড":"\u00C7","ড্য":"W\u00A8","ড্র":"W\u00AA",
   "ঢ্ঢ":"X&X","ঢ্য":"X\u00A8",
-  "ণ্ট":"\u00C8","ণ্ঠ":"\u00C9","ণ্ড":"\u00D0",
-  "ণ্ঢ":"Y&X","ণ্ণ":"Y\u0153","ণ্য":"Y\u00A8",
-  "ত্ত":"\u00CB","ত্থ":"\u00CC","ত্ন":"Z\u0153","ত্ব":"Z\u00A1",
-  "ত্ম":"Z\u00A5","ত্য":"Z\u00A8","ত্র":"\u00CE","ত্স":"Z&m",
+  "ণ্ট":"\u00C8","ণ্ঠ":"\u00C9","ণ্ড":"\u00D0","ণ্ঢ":"Y&X","ণ্ণ":"Y\u0153","ণ্য":"Y\u00A8",
+  "ত্ত":"\u00CB","ত্থ":"\u00CC","ত্ন":"Z\u0153","ত্ব":"Z\u00A1","ত্ম":"Z\u00A5","ত্য":"Z\u00A8","ত্র":"\u00CE","ত্স":"Z&m",
   "থ্য":"_\u00A8","থ্র":"_\u00AA",
-  "দ্দ":"\u00CF","দ্ধ":"\u00D7","দ্ন":"`&b","দ্ব":"\u00D8",
-  "দ্ম":"\u00D9","দ্য":"`\u00A8","দ্র":"`\u00AA",
+  "দ্দ":"\u00CF","দ্ধ":"\u00D7","দ্ন":"`&b","দ্ব":"\u00D8","দ্ম":"\u00D9","দ্য":"`\u00A8","দ্র":"`\u00AA",
   "ধ্ন":"a\u0153","ধ্ব":"a\u0178","ধ্ম":"a\u00A5","ধ্য":"a\u00A8","ধ্র":"a\u00AA",
-  "ন্ত":"\u0161\u00CD","ন্থ":"\u0161\u2019","ন্দ":"\u203A`",
-  "ন্ধ":"\u00DC","ন্ন":"b\u0153","ন্ব":"\u0161^",
-  "ন্ম":"b\u00A5","ন্য":"b\u00A8","ন্স":"\u00DD",
-  "প্ট":"\u00DE","প্ত":"\u00DF","প্ন":"c\u0153","প্প":"\u00E0",
-  "প্য":"c\u00A8","প্র":"c\u00AA","প্ল":"c\u00F8","প্স":"\u00E1",
+  "ন্ত":"\u0161\u00CD","ন্থ":"\u0161\u2019","ন্দ":"\u203A`","ন্ধ":"\u00DC","ন্ন":"b\u0153","ন্ব":"\u0161^","ন্ম":"b\u00A5","ন্য":"b\u00A8","ন্স":"\u00DD",
+  "প্ট":"\u00DE","প্ত":"\u00DF","প্ন":"c\u0153","প্প":"\u00E0","প্য":"c\u00A8","প্র":"c\u00AA","প্ল":"c\u00F8","প্স":"\u00E1",
   "ফ্র":"d\u00AA","ফ্ল":"d\u00AC",
-  "ব্জ":"\u00E2","ব্দ":"\u00E3","ব্ধ":"\u00E4",
-  "ব্ব":"e\u0178","ব্য":"e\u00A8","ব্র":"e\u00AA","ব্ল":"e\u00F8",
+  "ব্জ":"\u00E2","ব্দ":"\u00E3","ব্ধ":"\u00E4","ব্ব":"e\u0178","ব্য":"e\u00A8","ব্র":"e\u00AA","ব্ল":"e\u00F8",
   "ভ্ব":"f\u00A1","ভ্য":"f\u00A8","ভ্র":"\u00E5",
-  "ম্ন":"g\u0153","ম্প":"\u00A4\u00FA","ম্ব":"\u00A4^",
-  "ম্ভ":"\u00A4\u00A2","ম্ম":"\u00A4\u00A7","ম্য":"g\u00A8",
-  "ম্র":"g\u00AA","ম্ল":"\u00A4\u00F8",
-  "র্ক":"K\u00A9","র্খ":"L\u00A9","র্গ":"M\u00A9","র্ঘ":"N\u00A9",
-  "র্চ":"P\u00A9","র্ছ":"Q\u00A9","র্জ":"R\u00A9","র্ঝ":"S\u00A9",
-  "র্ট":"U\u00A9","র্ঠ":"V\u00A9","র্ড":"W\u00A9","র্ঢ":"X\u00A9",
-  "র্ণ":"Y\u00A9","র্ত":"Z\u00A9","র্থ":"_\u00A9","র্দ":"`\u00A9",
-  "র্ধ":"a\u00A9","র্ন":"b\u00A9","র্প":"c\u00A9","র্ফ":"d\u00A9",
-  "র্ব":"e\u00A9","র্ভ":"f\u00A9","র্ম":"g\u00A9","র্য":"h\u00A9",
-  "র্ল":"j\u00A9","র্শ":"k\u00A9","র্ষ":"l\u00A9","র্স":"m\u00A9",
-  "র্হ":"n\u00A9",
-  "ল্ক":"\u00E9","ল্গ":"\u00EA","ল্চ":"j&P","ল্জ":"j&R",
-  "ল্ট":"\u00EB","ল্ড":"\u00EC","ল্ত":"j&Z","ল্দ":"j&`",
+  "ম্ন":"g\u0153","ম্প":"\u00A4\u00FA","ম্ব":"\u00A4^","ম্ভ":"\u00A4\u00A2","ম্ম":"\u00A4\u00A7","ম্য":"g\u00A8","ম্র":"g\u00AA","ম্ল":"\u00A4\u00F8",
+  "র্ক":"K\u00A9","র্খ":"L\u00A9","র্গ":"M\u00A9","র্ঘ":"N\u00A9","র্চ":"P\u00A9","র্ছ":"Q\u00A9","র্জ":"R\u00A9","র্ঝ":"S\u00A9",
+  "র্ট":"U\u00A9","র্ঠ":"V\u00A9","র্ড":"W\u00A9","র্ঢ":"X\u00A9","র্ণ":"Y\u00A9","র্ত":"Z\u00A9","র্থ":"_\u00A9","র্দ":"`\u00A9",
+  "র্ধ":"a\u00A9","র্ন":"b\u00A9","র্প":"c\u00A9","র্ফ":"d\u00A9","র্ব":"e\u00A9","র্ভ":"f\u00A9","র্ম":"g\u00A9","র্য":"h\u00A9",
+  "র্ল":"j\u00A9","র্শ":"k\u00A9","র্ষ":"l\u00A9","র্স":"m\u00A9","র্হ":"n\u00A9",
+  "ল্ক":"\u00E9","ল্গ":"\u00EA","ল্চ":"j&P","ল্জ":"j&R","ল্ট":"\u00EB","ল্ড":"\u00EC","ল্ত":"j&Z","ল্দ":"j&`",
   "ল্প":"\u00ED","ল্ব":"j\u00A6","ল্ম":"j\u00A5","ল্য":"j\u00A8","ল্ল":"j\u00F8",
-  "শ্চ":"\u00F0","শ্ছ":"\u00F1","শ্ন":"k\u0153","শ্ব":"k\u00A6",
-  "শ্ম":"k\u00A5","শ্য":"k\u00A8","শ্র":"k\u00AA","শ্ল":"k\u00F8",
-  "ষ্ক":"\u00AE\u2039","ষ্ট":"\u00F3","ষ্ঠ":"\u00F4","ষ্ণ":"\u00F2",
-  "ষ্প":"\u00AE\u00FA","ষ্ফ":"\u00F5","ষ্ব":"\u00AE\u0178",
-  "ষ্ম":"\u00AE\u00A7","ষ্য":"l\u00A8",
-  "স্ক":"\u00AF\u2039","স্খ":"\u00F6","স্ট":"\u00F7","স্থ":"\u00AF\u2019",
-  "স্ন":"m\u0153","স্প":"\u00AF\u00FA","স্ফ":"\u00F9","স্ব":"\u00AF^",
-  "স্ম":"\u00AF\u00A7","স্য":"m\u00A8","স্র":"m\u00AA","স্ল":"\u00AF\u00F8","স্স":"m&m",
-  "হ্ণ":"n\u00E8","হ্ন":"\u00FD","হ্ব":"n\u0178","হ্ম":"\u00FE",
-  "হ্য":"n\u00A8","হ্র":"n\u00AA","হ্ল":"n\u00AC",
+  "শ্চ":"\u00F0","শ্ছ":"\u00F1","শ্ন":"k\u0153","শ্ব":"k\u00A6","শ্ম":"k\u00A5","শ্য":"k\u00A8","শ্র":"k\u00AA","শ্ল":"k\u00F8",
+  "ষ্ক":"\u00AE\u2039","ষ্ট":"\u00F3","ষ্ঠ":"\u00F4","ষ্ণ":"\u00F2","ষ্প":"\u00AE\u00FA","ষ্ফ":"\u00F5","ষ্ব":"\u00AE\u0178","ষ্ম":"\u00AE\u00A7","ষ্য":"l\u00A8",
+  "স্ক":"\u00AF\u2039","স্খ":"\u00F6","স্ট":"\u00F7","স্থ":"\u00AF\u2019","স্ন":"m\u0153","স্প":"\u00AF\u00FA","স্ফ":"\u00F9","স্ব":"\u00AF^","স্ম":"\u00AF\u00A7","স্য":"m\u00A8","স্র":"m\u00AA","স্ল":"\u00AF\u00F8","স্স":"m&m",
+  "হ্ণ":"n\u00E8","হ্ন":"\u00FD","হ্ব":"n\u0178","হ্ম":"\u00FE","হ্য":"n\u00A8","হ্র":"n\u00AA","হ্ল":"n\u00AC",
   "ৎস":"rm",
-  "ক্ষ্ম":"\u00B6\u00A5","ষ্ট্র":"\u00F3\u00AA","স্ত্র":"m&\u00CE",
-  "স্থ্র":"\u00AF\u2019&i","স্ট্র":"\u00F7\u00AA","স্প্র":"\u00AF\u00FA\u00AA",
-  "স্ক্র":"\u00AF\u0152","ন্ত্র":"\u0161\u00BF","ন্দ্র":"\u203A`\u00AA",
-  "ন্ধ্র":"\u00DC\u00AA","ম্প্র":"\u00A4\u00FA\u00AA","ত্ত্ব":"\u00CB\u00A1"
+  "ক্ষ্ম":"\u00B6\u00A5","ষ্ট্র":"\u00F3\u00AA","স্ত্র":"m&\u00CE","স্থ্র":"\u00AF\u2019&i","স্ট্র":"\u00F7\u00AA","স্প্র":"\u00AF\u00FA\u00AA",
+  "স্ক্র":"\u00AF\u0152","ন্ত্র":"\u0161\u00BF","ন্দ্র":"\u203A`\u00AA","ন্ধ্র":"\u00DC\u00AA","ম্প্র":"\u00A4\u00FA\u00AA","ত্ত্ব":"\u00CB\u00A1"
 };
 
-const SORTED_LIG_KEYS = Object.keys(LIG).sort((a,b) => b.length - a.length);
-
-/* ================================================================
-   Reverse maps
-   ================================================================ */
+const SORTED_LIG_KEYS = Object.keys(LIG).sort((a,b)=>b.length-a.length);
 const REVERSE_LIG = {};
-Object.keys(LIG)
-  .sort((a,b) => LIG[b].length - LIG[a].length)
-  .forEach(u => { if (!REVERSE_LIG[LIG[u]]) REVERSE_LIG[LIG[u]] = u; });
-
+Object.keys(LIG).sort((a,b)=>LIG[b].length-LIG[a].length).forEach(u=>{if(!REVERSE_LIG[LIG[u]])REVERSE_LIG[LIG[u]]=u;});
 const REVERSE_BASE = {};
-Object.keys(BASE).forEach(u => {
-  if (!REVERSE_BASE[BASE[u]]) REVERSE_BASE[BASE[u]] = u;
-});
-
-REVERSE_BASE["v"] = "া";
-REVERSE_BASE["x"] = "ী";
-REVERSE_BASE["y"] = "ু";
-REVERSE_BASE["~"] = "ূ";
-REVERSE_BASE["\u2026"] = "ৃ";
-
-const ALL_REVERSE = Object.assign({}, REVERSE_LIG, REVERSE_BASE);
-const REVERSE_KEYS = Object.keys(ALL_REVERSE).sort((a,b) => b.length - a.length);
-
+Object.keys(BASE).forEach(u=>{if(!REVERSE_BASE[BASE[u]])REVERSE_BASE[BASE[u]]=u;});
+REVERSE_BASE["v"]="া";REVERSE_BASE["x"]="ী";REVERSE_BASE["y"]="ু";REVERSE_BASE["~"]="ূ";REVERSE_BASE["\u2026"]="ৃ";
+const ALL_REVERSE = Object.assign({},REVERSE_LIG,REVERSE_BASE);
+const REVERSE_KEYS = Object.keys(ALL_REVERSE).sort((a,b)=>b.length-a.length);
 const REVERSE_DIGIT = {"0":"০","1":"১","2":"২","3":"৩","4":"৪","5":"৫","6":"৬","7":"৭","8":"৮","9":"৯"};
 
-/* ================================================================
-   Source cleanup
-   ================================================================ */
-function cleanUnicode(s) {
-  return s.normalize ? s.normalize("NFC") : s;
-}
-function recompose(s) {
-  return s
-    .replace(/[\u200C\u200D\uFEFF]/g, "")
-    .replace(/\u09AF\u09BC/g, "\u09DF")
-    .replace(/\u09A1\u09BC/g, "\u09DC")
-    .replace(/\u09A2\u09BC/g, "\u09DD")
-    .replace(/\u09C7\u09BE/g, "\u09CB")
-    .replace(/\u09C7\u09D7/g, "\u09CC")
-    .replace(/[\u09BC\u09D7]/g, "");
+function cleanUnicode(s){return s.normalize?s.normalize("NFC"):s;}
+function recompose(s){
+  return s.replace(/[\u200C\u200D\uFEFF]/g,"").replace(/\u09AF\u09BC/g,"\u09DF").replace(/\u09A1\u09BC/g,"\u09DC")
+    .replace(/\u09A2\u09BC/g,"\u09DD").replace(/\u09C7\u09BE/g,"\u09CB").replace(/\u09C7\u09D7/g,"\u09CC")
+    .replace(/[\u09BC\u09D7]/g,"");
 }
 
-/* ================================================================
-   Unicode → Bijoy
-   ================================================================ */
-function uniToBijoy(text) {
-  if (!text) return "";
-  const src = recompose(cleanUnicode(text));
-  let out = "";
-  let i = 0;
-  const n = src.length;
-
-  while (i < n) {
-    let bij = null, advance = 0;
-
-    for (const key of SORTED_LIG_KEYS) {
-      if (src.substr(i, key.length) === key) {
-        bij = LIG[key];
-        advance = key.length;
-        break;
-      }
+function uniToBijoy(text){
+  if(!text)return"";
+  const src=recompose(cleanUnicode(text));let out="",i=0;const n=src.length;
+  while(i<n){
+    let bij=null,advance=0;
+    for(const key of SORTED_LIG_KEYS){if(src.substr(i,key.length)===key){bij=LIG[key];advance=key.length;break;}}
+    if(bij===null&&src.charAt(i)==="র"&&src.charAt(i+1)===HASANTA&&i+2<n){
+      const j=i+2;let cb=null,cl=0;
+      for(const key of SORTED_LIG_KEYS){if(src.substr(j,key.length)===key){cb=LIG[key];cl=key.length;break;}}
+      if(cb===null&&CONS_SET.has(src.charAt(j))){cb=BASE[src.charAt(j)];cl=1;}
+      if(cb!==null){bij=cb+"\u00A9";advance=2+cl;}
     }
-
-    if (bij === null && src.charAt(i) === "র" && src.charAt(i+1) === HASANTA && i+2 < n) {
-      const j = i + 2;
-      let cb = null, cl = 0;
-      for (const key of SORTED_LIG_KEYS) {
-        if (src.substr(j, key.length) === key) { cb = LIG[key]; cl = key.length; break; }
-      }
-      if (cb === null && CONS_SET.has(src.charAt(j))) { cb = BASE[src.charAt(j)]; cl = 1; }
-      if (cb !== null) { bij = cb + "\u00A9"; advance = 2 + cl; }
+    if(bij===null&&CONS_SET.has(src.charAt(i))){bij=BASE[src.charAt(i)];advance=1;}
+    if(bij!==null){
+      i+=advance;const vs=src.charAt(i);
+      if(vs===I_KAR){bij="w"+bij;i++;}else if(vs===E_KAR){bij="\u2021"+bij;i++;}
+      else if(vs===OI_KAR){bij="\u02C6"+bij;i++;}else if(vs===O_KAR){bij="\u2021"+bij+"v";i++;}
+      else if(vs===AU_KAR){bij="\u2021"+bij+"\u0160";i++;}else if(VOWEL[vs]){bij=bij+VOWEL[vs];i++;}
+      out+=bij;continue;
     }
-
-    if (bij === null && CONS_SET.has(src.charAt(i))) {
-      bij = BASE[src.charAt(i)]; advance = 1;
-    }
-
-    if (bij !== null) {
-      i += advance;
-      const vs = src.charAt(i);
-      if      (vs === I_KAR)  { bij = "w"       + bij;            i++; }
-      else if (vs === E_KAR)  { bij = "\u2021"  + bij;            i++; }
-      else if (vs === OI_KAR) { bij = "\u02C6"  + bij;            i++; }
-      else if (vs === O_KAR)  { bij = "\u2021"  + bij + "v";      i++; }
-      else if (vs === AU_KAR) { bij = "\u2021"  + bij + "\u0160"; i++; }
-      else if (VOWEL[vs])     { bij = bij + VOWEL[vs];            i++; }
-      out += bij;
-      continue;
-    }
-
-    const ch = src.charAt(i);
-    if (BASE[ch])              { out += BASE[ch];   i++; continue; }
-    if (VOWEL[ch])             { out += VOWEL[ch];  i++; continue; }
-    if (ch === HASANTA)        { out += "&";        i++; continue; }
-    if (ch === I_KAR)          { out += "w";        i++; continue; }
-    if (ch === E_KAR)          { out += "\u2021";   i++; continue; }
-    if (ch === OI_KAR)         { out += "\u02C6";   i++; continue; }
-    if (ch === O_KAR)          { out += "\u2021v";  i++; continue; }
-    if (ch === AU_KAR)         { out += "\u2021\u0160"; i++; continue; }
-    if (DIGIT[ch])             { out += DIGIT[ch];  i++; continue; }
-    if (ch === "।")            { out += "|";        i++; continue; }
-    if (ch === "\u2018" || ch === "\u2019") { out += "'"; i++; continue; }
-    if (ch === "\u201C" || ch === "\u201D") { out += '"'; i++; continue; }
-    if (ch === "\u2013" || ch === "\u2014") { out += "-"; i++; continue; }
-    out += ch; i++;
+    const ch=src.charAt(i);
+    if(BASE[ch]){out+=BASE[ch];i++;continue;}
+    if(VOWEL[ch]){out+=VOWEL[ch];i++;continue;}
+    if(ch===HASANTA){out+="&";i++;continue;}
+    if(ch===I_KAR){out+="w";i++;continue;}
+    if(ch===E_KAR){out+="\u2021";i++;continue;}
+    if(ch===OI_KAR){out+="\u02C6";i++;continue;}
+    if(ch===O_KAR){out+="\u2021v";i++;continue;}
+    if(ch===AU_KAR){out+="\u2021\u0160";i++;continue;}
+    if(DIGIT[ch]){out+=DIGIT[ch];i++;continue;}
+    if(ch==="।"){out+="|";i++;continue;}
+    if(ch==="\u2018"||ch==="\u2019"){out+="'";i++;continue;}
+    if(ch==="\u201C"||ch==="\u201D"){out+='"';i++;continue;}
+    if(ch==="\u2013"||ch==="\u2014"){out+="-";i++;continue;}
+    out+=ch;i++;
   }
   return out;
 }
 
-/* ================================================================
-   Bijoy → Unicode
-   ================================================================ */
-function bijoyToUni(text) {
-  if (!text) return "";
-  let out = "";
-  let lastClusterStart = 0;
-  let i = 0;
-  const n = text.length;
-  let pendingVowel = null;
-
-  while (i < n) {
-    const ch = text.charAt(i);
-
-    if (ch === "w" || ch === "\u2021" || ch === "\u02C6") {
-      pendingVowel = ch; i++; continue;
-    }
-
-    if (ch === "\u00A9") {
-      out = out.slice(0, lastClusterStart) + "\u09B0\u09CD" + out.slice(lastClusterStart);
-      lastClusterStart += 2;
-      i++; continue;
-    }
-
-    let matched = null;
-    for (const key of REVERSE_KEYS) {
-      if (text.substr(i, key.length) === key) {
-        matched = ALL_REVERSE[key];
-        i += key.length;
-        break;
-      }
-    }
-
-    if (matched === null && REVERSE_DIGIT[ch]) {
-      matched = REVERSE_DIGIT[ch]; i++;
-    }
-
-    if (matched === null) {
-      matched = ch; i++;
-    }
-
-    if (pendingVowel !== null) {
+function bijoyToUni(text){
+  if(!text)return"";
+  let out="",lastClusterStart=0,i=0,pendingVowel=null;const n=text.length;
+  while(i<n){
+    const ch=text.charAt(i);
+    if(ch==="w"||ch==="\u2021"||ch==="\u02C6"){pendingVowel=ch;i++;continue;}
+    if(ch==="\u00A9"){out=out.slice(0,lastClusterStart)+"\u09B0\u09CD"+out.slice(lastClusterStart);lastClusterStart+=2;i++;continue;}
+    let matched=null;
+    for(const key of REVERSE_KEYS){if(text.substr(i,key.length)===key){matched=ALL_REVERSE[key];i+=key.length;break;}}
+    if(matched===null&&REVERSE_DIGIT[ch]){matched=REVERSE_DIGIT[ch];i++;}
+    if(matched===null){matched=ch;i++;}
+    if(pendingVowel!==null){
       let vu;
-      if (pendingVowel === "w") vu = "\u09BF";
-      else if (pendingVowel === "\u02C6") vu = "\u09C8";
-      else {
-        vu = "\u09C7";
-        if (text.charAt(i) === "v")           { vu = "\u09CB"; i++; }
-        else if (text.charAt(i) === "\u0160") { vu = "\u09CC"; i++; }
-      }
-      matched = matched + vu;
-      pendingVowel = null;
+      if(pendingVowel==="w")vu="\u09BF";else if(pendingVowel==="\u02C6")vu="\u09C8";
+      else{vu="\u09C7";if(text.charAt(i)==="v"){vu="\u09CB";i++;}else if(text.charAt(i)==="\u0160"){vu="\u09CC";i++;}}
+      matched=matched+vu;pendingVowel=null;
     }
-
-    lastClusterStart = out.length;
-    out += matched;
+    lastClusterStart=out.length;out+=matched;
   }
   return out;
 }
 
 /* ================================================================
-   Fallback wordlist
+   Fallback word list
    ================================================================ */
-const FALLBACK_WORDS = `আমি আমার আমরা আমাদের তুমি তোমার তোমরা আপনি আপনার আপনারা সে তার তারা তাদের তিনি তাঁর তিনারা এবং কিন্তু তবে যদি কারণ তাই সুতরাং আর এই সেই ওই কী কি কে কারা কোথায় কখন কেন হয় হয়েছিল হবে হচ্ছে ছিল ছিলেন করে করেন করলেন বলে বলেন একটি একটা অনেক সব কিছু কোনো ভালো খারাপ বড় ছোট নতুন পুরনো আজ কাল এখন তখন পরে আগে বাংলা বাংলাদেশ বাংলাদেশের ঢাকা ভারত মানুষ ছেলে মেয়ে শিশু বাবা মা ভাই বোন বই কলম ঘর বাড়ি পানি ভাত মাছ দুধ স্কুল কলেজ বিশ্ববিদ্যালয় শিক্ষক ছাত্র শিক্ষা সরকার মন্ত্রী নির্বাচন ভোট সময় দিন মাস বছর টাকা দাম বাজার শহর গ্রাম দেশ ভাষা শব্দ বাক্য গল্প কবিতা গান স্বাধীনতা যুদ্ধ শান্তি মুক্তিযুদ্ধ সোনার বাংলার সংস্কৃতি রাষ্ট্রপতি মন্ত্রণালয় পরীক্ষা প্রতিষ্ঠান স্বাস্থ্য অর্থনীতি উত্তর সম্পূর্ণ কৃষ্ণ ঈশ্বর দুঃখ ইত্যাদি ঐতিহ্য পরিশ্চিত স্বাস্থ্যসেবা`.split(/\s+/).filter(Boolean);
+const FALLBACK_WORDS = `আমি আমার আমরা আমাদের তুমি তোমার তোমরা আপনি আপনার আপনারা সে তার তারা তাদের তিনি তাঁর এবং কিন্তু তবে যদি কারণ তাই সুতরাং আর এই সেই ওই কী কি কে কারা কোথায় কখন কেন হয় হয়েছিল হবে হচ্ছে ছিল করে করেন করলেন বলে বলেন একটি একটা অনেক সব কিছু কোনো ভালো খারাপ বড় ছোট নতুন পুরনো আজ কাল এখন তখন পরে আগে বাংলা বাংলাদেশ বাংলাদেশের ঢাকা ভারত মানুষ ছেলে মেয়ে শিশু বাবা মা ভাই বোন বই কলম ঘর বাড়ি পানি ভাত মাছ দুধ স্কুল কলেজ বিশ্ববিদ্যালয় শিক্ষক ছাত্র শিক্ষা সরকার মন্ত্রী নির্বাচন ভোট সময় দিন মাস বছর টাকা দাম বাজার শহর গ্রাম দেশ ভাষা শব্দ বাক্য গল্প কবিতা গান স্বাধীনতা যুদ্ধ শান্তি মুক্তিযুদ্ধ সোনার বাংলার সংস্কৃতি রাষ্ট্রপতি মন্ত্রণালয় পরীক্ষা প্রতিষ্ঠান স্বাস্থ্য অর্থনীতি উত্তর সম্পূর্ণ কৃষ্ণ ঈশ্বর দুঃখ ইত্যাদি ঐতিহ্য`.split(/\s+/).filter(Boolean);
 
 /* ================================================================
-   Spell-check state
+   Spell state
    ================================================================ */
-let spellChecker = null;
+let wordSet = null;
 let spellReady = false;
 let spellLoading = false;
 let spellMode = "off";
 let direction = "uni2bi";
 
-/* user dictionary — stores Unicode↔Bijoy pairs */
 const USER_DICT_KEY = "bijoy_user_dict_v2";
-let userPairs = [];                // [{uni, bijoy}]
-let userDictUnicode = new Set();   // for Bijoy→Uni direction (output is Unicode)
-let userDictBijoy = new Set();     // for Uni→Bijoy direction (output is Bijoy)
-
-function loadUserDict() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(USER_DICT_KEY) || "[]");
-    userPairs = Array.isArray(raw) ? raw : [];
-  } catch (e) {
-    userPairs = [];
-  }
-  userDictUnicode.clear();
-  userDictBijoy.clear();
-  userPairs.forEach(p => {
-    if (p && p.uni)   userDictUnicode.add(p.uni);
-    if (p && p.bijoy) userDictBijoy.add(p.bijoy);
-  });
-}
-
-function saveUserDict() {
-  localStorage.setItem(USER_DICT_KEY, JSON.stringify(userPairs));
-}
-
-function addPair(uni, bijoy) {
-  uni   = (uni   || "").trim();
-  bijoy = (bijoy || "").trim();
-  if (!uni && !bijoy) return false;
-
-  /* skip duplicates */
-  const exists = userPairs.some(p =>
-    (uni && p.uni === uni) || (bijoy && p.bijoy === bijoy)
-  );
-  if (exists) return false;
-
-  userPairs.push({ uni, bijoy });
-  if (uni)   userDictUnicode.add(uni);
-  if (bijoy) userDictBijoy.add(bijoy);
-  saveUserDict();
-  return true;
-}
+const SPELL_MODE_KEY = "bijoy_spell_mode";
+let userPairs = [];
+let userDictUnicode = new Set();
+let userDictBijoy = new Set();
 
 /* ================================================================
-   Dictionary loader
+   Word list sources
    ================================================================ */
-const DICT_SOURCES = [
-  {
-    label: "wooorm/bn",
-    aff: "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/bn/index.aff",
-    dic: "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/bn/index.dic"
-  },
-  {
-    label: "LibreOffice bn_BD",
-    aff: "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/bn_BD/bn_BD.aff",
-    dic: "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/bn_BD/bn_BD.dic"
-  },
-  {
-    label: "LibreOffice bn_IN",
-    aff: "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/bn_IN/bn_IN.aff",
-    dic: "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/bn_IN/bn_IN.dic"
-  }
+const WORD_LIST_URLS = [
+  "./BengaliWordList_439.txt",
+  "BengaliWordList_439.txt",
+  "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2016/bn/bn_50k.txt"
 ];
 
-async function fetchFirstAvailable(sources) {
-  let lastErr = null;
-  for (const src of sources) {
-    try {
-      const [affRes, dicRes] = await Promise.all([fetch(src.aff), fetch(src.dic)]);
-      if (affRes.ok && dicRes.ok) {
-        const affText = await affRes.text();
-        const dicText = await dicRes.text();
-        if (affText.length > 100 && dicText.length > 100) {
-          return { aff: affText, dic: dicText, label: src.label };
-        }
-      }
-    } catch (e) { lastErr = e; }
+async function fetchWithTimeout(url, ms) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return res;
+  } finally { clearTimeout(timeout); }
+}
+
+function parseWordList(text) {
+  const set = new Set();
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const word = trimmed.split(/\s+/)[0];
+    if (!word) continue;
+    if (!/[\u0980-\u09FF]/.test(word)) continue;
+    set.add(word);
   }
-  throw lastErr || new Error("All dictionary sources failed");
+  return set;
+}
+
+async function tryFetchWordList(url) {
+  diag(`Trying: ${url}`);
+  const res = await fetchWithTimeout(url, 20000);
+  diag(`  → HTTP ${res.status} ${res.statusText}`);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const text = await res.text();
+  diag(`  → ${text.length.toLocaleString()} bytes received`);
+  if (text.length < 100) throw new Error("Response too small — probably HTML 404 page");
+  const set = parseWordList(text);
+  diag(`  → ${set.size.toLocaleString()} Bengali words parsed`);
+  if (set.size < 1000) throw new Error("Too few words: " + set.size);
+  return set;
 }
 
 async function loadDictionary() {
   if (spellReady || spellLoading) return;
   spellLoading = true;
   updateDictStatus("loading");
+  diagClear();
+  diag("=== Loading word list ===");
 
+  if (location.protocol === "file:") {
+    diag("⚠ You are on file:// — fetch() is blocked by the browser.");
+    diag("  Use a local server: python3 -m http.server 8000");
+    diag("  Or click '📁 Load Word List' to pick the .txt file manually.");
+  }
+
+  for (const url of WORD_LIST_URLS) {
+    try {
+      const set = await tryFetchWordList(url);
+      wordSet = set;
+      spellReady = true;
+      spellLoading = false;
+      updateDictStatus("ready");
+      showToast(`Loaded ${set.size.toLocaleString()} words`);
+      diag(`✓ SUCCESS — ${set.size.toLocaleString()} words from ${url}`);
+      render();
+      return;
+    } catch (err) {
+      diag(`✗ FAILED: ${err.message}`);
+    }
+  }
+
+  diag("All sources failed. Using fallback.");
+  wordSet = new Set(FALLBACK_WORDS);
+  spellReady = true;
+  spellLoading = false;
+  updateDictStatus("ready", "fallback");
+  showToast(`Fallback: ${FALLBACK_WORDS.length} words`);
+  render();
+}
+
+/* Manual file upload — bypasses fetch entirely */
+async function loadFromFile(file) {
+  spellLoading = true;
+  updateDictStatus("loading");
+  diagClear();
+  diag(`=== Loading from file: ${file.name} ===`);
+  diag(`Size: ${file.size.toLocaleString()} bytes`);
   try {
-    const nspell = await loadNspell();
-    const dict = await fetchFirstAvailable(DICT_SOURCES);
-    spellChecker = nspell({ aff: dict.aff, dic: dict.dic });
+    const text = await file.text();
+    diag(`Read: ${text.length.toLocaleString()} chars`);
+    const set = parseWordList(text);
+    diag(`Parsed: ${set.size.toLocaleString()} Bengali words`);
+    if (set.size < 100) throw new Error("Too few words — is this the right file?");
+    wordSet = set;
     spellReady = true;
     spellLoading = false;
     updateDictStatus("ready");
-    showToast(`Dictionary loaded (${dict.label})`);
+    showToast(`Loaded ${set.size.toLocaleString()} words from file`);
+    diag(`✓ SUCCESS`);
     render();
   } catch (err) {
-    console.error("Dictionary load failed:", err);
-    try {
-      const nspell = await loadNspell();
-      const affText = "SET UTF-8\n";
-      const dicText = FALLBACK_WORDS.length + "\n" + FALLBACK_WORDS.join("\n");
-      spellChecker = nspell({ aff: affText, dic: dicText });
-      spellReady = true;
-      spellLoading = false;
-      updateDictStatus("ready", "fallback");
-      showToast(`Fallback dictionary (${FALLBACK_WORDS.length} words)`);
-      render();
-    } catch (e2) {
-      console.error(e2);
-      spellLoading = false;
-      updateDictStatus("error");
-      showToast("Dictionary failed to load");
-    }
+    diag(`✗ FAILED: ${err.message}`);
+    spellLoading = false;
+    updateDictStatus("error");
+    showToast("File read failed: " + err.message);
   }
 }
 
 /* ================================================================
-   Flag unknown words — pairs source/output tokens so we can save both
+   Word lookup
+   ================================================================ */
+function isKnownWord(word) {
+  if (!wordSet || !word) return false;
+  if (wordSet.has(word)) return true;
+  try {
+    const norm = word.normalize ? word.normalize("NFC") : word;
+    if (norm !== word && wordSet.has(norm)) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ================================================================
+   Flag words
    ================================================================ */
 function flagWords(srcText, outText, dir) {
-  if (spellMode === "off" || !spellReady || !spellChecker) {
+  if (spellMode === "off" || !spellReady || !wordSet) {
     return { html: escapeHtml(outText), errors: [] };
   }
-
-  /* Both texts should have identical whitespace structure because the
-     converter preserves whitespace exactly. If they don't, we just
-     skip pairing and save only the output form. */
   const srcTokens = srcText.split(/(\s+)/);
   const outTokens = outText.split(/(\s+)/);
   const canPair = srcTokens.length === outTokens.length;
-
-  /* Which user-dict set applies to the OUTPUT of this direction? */
   const userSet = (dir === "uni2bi") ? userDictBijoy : userDictUnicode;
-
   const errors = [];
   let html = "";
 
   outTokens.forEach((part, i) => {
     if (!part) return;
     if (/^\s+$/.test(part)) { html += escapeHtml(part); return; }
-
     const core = part.replace(/^[।|,.;:!?"'()\[\]{}<>—–\-]+|[।|,.;:!?"'()\[\]{}<>—–\-]+$/g, "");
     if (!core) { html += escapeHtml(part); return; }
-
-    /* user-dict override — the appropriate form for this direction */
-    if (userSet.has(part) || userSet.has(core)) {
-      html += escapeHtml(part);
-      return;
-    }
-
+    if (userSet.has(part) || userSet.has(core)) { html += escapeHtml(part); return; }
     const unicodeWord = (dir === "uni2bi") ? bijoyToUni(core) : core;
-    const isCorrect = spellChecker.correct(unicodeWord);
-
-    if (isCorrect) {
-      html += escapeHtml(part);
-    } else {
+    if (isKnownWord(unicodeWord)) { html += escapeHtml(part); }
+    else {
       const idx = errors.length;
-      /* the paired source word (if whitespace aligned) */
       const srcWord = canPair ? srcTokens[i] : "";
-
-      /* which form is uni and which is bijoy depends on direction */
-      const uniForm   = (dir === "uni2bi") ? srcWord : part;
-      const bijoyForm = (dir === "uni2bi") ? part    : srcWord;
-
-      errors.push({
-        word: part,
-        core: core,
-        index: idx,
-        srcWord: srcWord,
-        uni: uniForm,
-        bijoy: bijoyForm
-      });
-
-      html +=
-        '<span class="flagged" data-err-idx="' + idx +
-        '" data-word="' + escapeHtml(part) +
-        '" data-src="' + escapeHtml(srcWord) +
-        '" data-uni="' + escapeHtml(uniForm) +
-        '" data-bijoy="' + escapeHtml(bijoyForm) +
-        '">' + escapeHtml(part) + '</span>';
+      const uniForm = (dir === "uni2bi") ? srcWord : part;
+      const bijoyForm = (dir === "uni2bi") ? part : srcWord;
+      errors.push({ word: part, core, index: idx, srcWord, uni: uniForm, bijoy: bijoyForm });
+      html += `<span class="flagged" data-err-idx="${idx}" data-word="${escapeHtml(part)}" data-uni="${escapeHtml(uniForm)}" data-bijoy="${escapeHtml(bijoyForm)}">${escapeHtml(part)}</span>`;
     }
   });
-
   return { html, errors };
 }
 
 function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 
 /* ================================================================
-   UI elements
+   UI
    ================================================================ */
-const inputEl    = document.getElementById("input");
-const outputEl   = document.getElementById("output");
-const inCount    = document.getElementById("inCount");
-const outCount   = document.getElementById("outCount");
-const errBadge   = document.getElementById("errBadge");
-const errCount   = document.getElementById("errCount");
-const errorList  = document.getElementById("errorList");
-const toastEl    = document.getElementById("toast");
-const inLabel    = document.getElementById("inLabel");
-const outLabel   = document.getElementById("outLabel");
-const dictStatus = document.getElementById("dictStatus");
-const tooltip     = document.getElementById("wordTooltip");
-const tooltipUni  = document.getElementById("tooltipUni");
-const tooltipBijoy= document.getElementById("tooltipBijoy");
-const addToDictBtn= document.getElementById("addToDictBtn");
+const inputEl=document.getElementById("input"),outputEl=document.getElementById("output");
+const inCount=document.getElementById("inCount"),outCount=document.getElementById("outCount");
+const errBadge=document.getElementById("errBadge"),errCount=document.getElementById("errCount");
+const errorList=document.getElementById("errorList"),inLabel=document.getElementById("inLabel");
+const outLabel=document.getElementById("outLabel"),dictStatus=document.getElementById("dictStatus");
+const tooltip=document.getElementById("wordTooltip"),tooltipUni=document.getElementById("tooltipUni");
+const tooltipBijoy=document.getElementById("tooltipBijoy"),addToDictBtn=document.getElementById("addToDictBtn");
+const toastEl=document.getElementById("toast"),toastMsg=document.getElementById("toastMsg");
+const toastActionBtn=document.getElementById("toastActionBtn");
+const dictList=document.getElementById("dictList"),dictCount=document.getElementById("dictCount");
+const dictBtnCount=document.getElementById("dictBtnCount");
 
-let toastTimer = null;
-let tooltipHideTimer = null;
-let lastOutput = "";
-let lastErrors = [];
-let tooltipPair = { uni: "", bijoy: "" };
+let toastTimer=null,toastAction=null,tooltipHideTimer=null,lastOutput="",lastErrors=[],tooltipPair={uni:"",bijoy:""};
 
-function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add("show");
+function loadUserDict() {
+  try { const raw = JSON.parse(lsGet(USER_DICT_KEY, "[]")); userPairs = Array.isArray(raw) ? raw : []; }
+  catch(e){ userPairs = []; }
+  userDictUnicode.clear(); userDictBijoy.clear();
+  userPairs.forEach(p => { if(p&&p.uni)userDictUnicode.add(p.uni); if(p&&p.bijoy)userDictBijoy.add(p.bijoy); });
+}
+function saveUserDict() { const ok = lsSet(USER_DICT_KEY, JSON.stringify(userPairs)); if(!ok)showToast("⚠ Storage full"); return ok; }
+function addPair(uni, bijoy) {
+  uni=(uni||"").trim(); bijoy=(bijoy||"").trim();
+  if(!uni&&!bijoy)return null;
+  if(userPairs.some(p=>(uni&&p.uni===uni)||(bijoy&&p.bijoy===bijoy)))return null;
+  userPairs.push({uni,bijoy});
+  if(uni)userDictUnicode.add(uni); if(bijoy)userDictBijoy.add(bijoy);
+  saveUserDict(); return {uni,bijoy};
+}
+function removePair(pair) {
+  userPairs = userPairs.filter(p => !(p.uni===pair.uni && p.bijoy===pair.bijoy));
+  if(pair.uni)userDictUnicode.delete(pair.uni); if(pair.bijoy)userDictBijoy.delete(pair.bijoy);
+  saveUserDict();
+}
+
+function showToast(msg, opts) {
+  opts = opts||{}; toastMsg.textContent = msg; toastEl.classList.add("show");
+  if(opts.actionLabel && opts.onAction) {
+    toastActionBtn.textContent = opts.actionLabel;
+    toastActionBtn.style.display = "inline-block";
+    toastAction = opts.onAction;
+  } else { toastActionBtn.style.display = "none"; toastAction = null; }
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+  toastTimer = setTimeout(()=>{toastEl.classList.remove("show");toastAction=null;}, opts.duration||2400);
+}
+toastActionBtn.addEventListener("click", ()=>{
+  if(toastAction){const fn=toastAction;clearTimeout(toastTimer);toastEl.classList.remove("show");toastAction=null;fn();}
+});
+
+function addAndShowUndo(uni, bijoy) {
+  const added = addPair(uni, bijoy);
+  if(!added){showToast("Already in dictionary");return;}
+  const label = (uni||"—")+" ↔ "+(bijoy||"—");
+  showToast("Saved: "+label, { actionLabel:"Undo", onAction:()=>{ removePair(added); showToast("Removed: "+label); updateDictStatus(spellMode==="off"?"off":"ready"); render(); renderDictList(); }, duration:5000 });
+  updateDictStatus(spellMode==="off"?"off":"ready"); render(); renderDictList();
 }
 
 function updateDictStatus(state, extra) {
-  if (state === "loading") {
-    dictStatus.textContent = "Loading dictionary…";
-    dictStatus.className = "status loading";
-  } else if (state === "ready") {
-    dictStatus.textContent = extra === "fallback"
-      ? "Fallback dictionary (" + FALLBACK_WORDS.length + " words)"
-      : "Deep check active · " + userPairs.length + " user words";
-    dictStatus.className = "status ok";
-  } else if (state === "error") {
-    dictStatus.textContent = "Dictionary load failed";
-    dictStatus.className = "status warn";
-  } else if (spellMode === "off") {
-    dictStatus.textContent = "Spell check off";
-    dictStatus.className = "status";
-  } else {
-    dictStatus.textContent = "Spell check on";
-    dictStatus.className = "status";
+  if(state==="loading"){dictStatus.textContent="Loading dictionary…";dictStatus.className="status loading";}
+  else if(state==="ready"){
+    if(extra==="fallback"){dictStatus.textContent="Fallback ("+FALLBACK_WORDS.length+" words)";dictStatus.className="status warn";}
+    else{dictStatus.textContent="Active · "+(wordSet?wordSet.size.toLocaleString():0)+" words";dictStatus.className="status ok";}
   }
+  else if(state==="error"){dictStatus.textContent="Dictionary load failed";dictStatus.className="status warn";}
+  else if(spellMode==="off"){dictStatus.textContent="Spell check off";dictStatus.className="status";}
+  else{dictStatus.textContent="Spell check on";dictStatus.className="status";}
 }
 
-/* ================================================================
-   Render
-   ================================================================ */
 function render() {
   const src = inputEl.value;
-  const out = direction === "uni2bi" ? uniToBijoy(src) : bijoyToUni(src);
+  const out = direction==="uni2bi" ? uniToBijoy(src) : bijoyToUni(src);
   lastOutput = out;
-
   const flagged = flagWords(src, out, direction);
   lastErrors = flagged.errors;
-
   outputEl.innerHTML = flagged.html || '<span style="color:#8896a8">…</span>';
-  outputEl.classList.toggle("raw", direction === "bi2uni");
-
-  inCount.textContent  = src.length + " chars";
+  outputEl.classList.toggle("raw", direction==="bi2uni");
+  inCount.textContent = src.length + " chars";
   outCount.textContent = out.length + " chars";
-
-  if (lastErrors.length === 0) {
-    errBadge.textContent = "Clean";
-    errBadge.className = "badge ok";
-    errCount.textContent = "0";
-    errCount.className = "count zero";
+  if(lastErrors.length === 0) {
+    errBadge.textContent = "Clean"; errBadge.className = "badge ok";
+    errCount.textContent = "0"; errCount.className = "count zero";
   } else {
-    errBadge.textContent = lastErrors.length + " flagged";
-    errBadge.className = "badge err";
-    errCount.textContent = lastErrors.length;
-    errCount.className = "count";
+    errBadge.textContent = lastErrors.length + " flagged"; errBadge.className = "badge err";
+    errCount.textContent = lastErrors.length; errCount.className = "count";
   }
-
   renderErrorList();
 }
 
 function renderErrorList() {
-  if (lastErrors.length === 0) {
-    errorList.innerHTML = '<li style="justify-content:center;color:#8896a8;cursor:default;">No flagged words. Enable spell check to detect unknown words.</li>';
+  if(lastErrors.length === 0) {
+    errorList.innerHTML = '<li style="justify-content:center;color:#8896a8;cursor:default;">No flagged words.</li>';
     return;
   }
   errorList.innerHTML = "";
   lastErrors.forEach(err => {
     const li = document.createElement("li");
-    li.setAttribute("data-err-idx", err.index);
-    li.innerHTML =
-      '<span class="word' + (direction === "uni2bi" ? " bijoy" : "") + '">' +
-        escapeHtml(err.word) +
-      '</span>' +
-      '<span class="msg">not found in dictionary</span>' +
-      '<button class="add-dict" type="button">Add both</button>';
+    li.innerHTML = `<span class="word${direction==="uni2bi"?" bijoy":""}">${escapeHtml(err.word)}</span><span class="msg">not in dictionary</span><button class="add-dict" type="button">Add both</button>`;
     li.addEventListener("click", ev => {
-      if (ev.target.classList.contains("add-dict")) {
-        ev.stopPropagation();
-        const added = addPair(err.uni, err.bijoy);
-        if (added) {
-          showToast("Saved pair: " + (err.uni || "—") + " ↔ " + (err.bijoy || "—"));
-          updateDictStatus("ready");
-        } else {
-          showToast("Already in dictionary");
-        }
-        render();
-        return;
-      }
+      if(ev.target.classList.contains("add-dict")){ev.stopPropagation();addAndShowUndo(err.uni,err.bijoy);return;}
       highlightError(err.index);
     });
     errorList.appendChild(li);
   });
 }
 
-function highlightError(idx) {
-  const target = outputEl.querySelector('[data-err-idx="' + idx + '"]');
-  if (!target) return;
-  outputEl.querySelectorAll(".highlight").forEach(el => el.classList.remove("highlight"));
-  target.classList.add("highlight");
-  target.scrollIntoView({ behavior:"smooth", block:"center" });
+function renderDictList() {
+  dictCount.textContent = userPairs.length;
+  dictCount.className = "count"+(userPairs.length===0?" zero":"");
+  dictBtnCount.textContent = "("+userPairs.length+")";
+  if(userPairs.length === 0) {
+    dictList.innerHTML = '<li style="justify-content:center;color:#8896a8;">No saved words yet.</li>';
+    return;
+  }
+  dictList.innerHTML = "";
+  [...userPairs].reverse().forEach(pair => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="dict-uni">${escapeHtml(pair.uni||"—")}</span><span>↔</span><span class="dict-bijoy">${escapeHtml(pair.bijoy||"—")}</span><button class="dict-del" type="button">×</button>`;
+    li.querySelector(".dict-del").addEventListener("click", () => {
+      removePair(pair); showToast("Removed"); updateDictStatus(spellMode==="off"?"off":"ready"); render(); renderDictList();
+    });
+    dictList.appendChild(li);
+  });
 }
 
-/* ================================================================
-   Hover tooltip
-   ================================================================ */
-outputEl.addEventListener("mouseover", e => {
-  const span = e.target.closest(".flagged");
-  if (!span) return;
-  clearTimeout(tooltipHideTimer);
+function highlightError(idx) {
+  const t = outputEl.querySelector('[data-err-idx="'+idx+'"]');
+  if(!t)return;
+  outputEl.querySelectorAll(".highlight").forEach(el=>el.classList.remove("highlight"));
+  t.classList.add("highlight"); t.scrollIntoView({behavior:"smooth",block:"center"});
+}
 
+function positionAndShowTooltip(span) {
   const rect = span.getBoundingClientRect();
-  const uni   = span.getAttribute("data-uni")   || "";
-  const bijoy = span.getAttribute("data-bijoy") || "";
-  tooltipPair = { uni, bijoy };
-
-  tooltipUni.textContent   = uni   || "—";
-  tooltipBijoy.textContent = bijoy || "—";
-
-  let left = rect.left;
-  const tooltipWidth = 240;
-  if (left + tooltipWidth > window.innerWidth - 8) {
-    left = window.innerWidth - tooltipWidth - 8;
-  }
-  if (left < 8) left = 8;
-
-  let top = rect.bottom + 6;
-  if (top + 160 > window.innerHeight) {
-    top = rect.top - 150;
-  }
-
-  tooltip.style.left = left + "px";
-  tooltip.style.top = top + "px";
+  const uni = span.getAttribute("data-uni")||"";
+  const bijoy = span.getAttribute("data-bijoy")||"";
+  tooltipPair = {uni,bijoy};
+  tooltipUni.textContent = uni||"—"; tooltipBijoy.textContent = bijoy||"—";
+  const tw = 240; let left = rect.left;
+  if(left+tw>window.innerWidth-8)left=window.innerWidth-tw-8;
+  if(left<8)left=8;
+  let top = rect.bottom+6;
+  if(top+160>window.innerHeight)top=Math.max(8,rect.top-150);
+  tooltip.style.left = left+"px"; tooltip.style.top = top+"px";
   tooltip.classList.add("show");
-});
+}
 
-outputEl.addEventListener("mouseout", e => {
-  const span = e.target.closest(".flagged");
-  if (!span) return;
-  tooltipHideTimer = setTimeout(() => {
-    if (!tooltip.matches(":hover")) tooltip.classList.remove("show");
-  }, 250);
-});
+outputEl.addEventListener("mouseover", e=>{const s=e.target.closest(".flagged");if(!s)return;clearTimeout(tooltipHideTimer);positionAndShowTooltip(s);});
+outputEl.addEventListener("mouseout", e=>{const s=e.target.closest(".flagged");if(!s)return;tooltipHideTimer=setTimeout(()=>{if(!tooltip.matches(":hover"))tooltip.classList.remove("show");},250);});
+tooltip.addEventListener("mouseleave",()=>tooltip.classList.remove("show"));
+tooltip.addEventListener("mouseenter",()=>clearTimeout(tooltipHideTimer));
+outputEl.addEventListener("scroll",()=>tooltip.classList.remove("show"),{passive:true});
 
-tooltip.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-tooltip.addEventListener("mouseenter", () => clearTimeout(tooltipHideTimer));
-
-addToDictBtn.addEventListener("click", () => {
-  const { uni, bijoy } = tooltipPair;
-  if (!uni && !bijoy) return;
-  const added = addPair(uni, bijoy);
+addToDictBtn.addEventListener("click", ()=>{
+  const {uni,bijoy} = tooltipPair;
+  if(!uni && !bijoy)return;
   tooltip.classList.remove("show");
-  if (added) {
-    showToast("Saved: " + (uni || "—") + " ↔ " + (bijoy || "—"));
-    updateDictStatus("ready");
-    render();
-  } else {
-    showToast("Already in dictionary");
-  }
+  addAndShowUndo(uni, bijoy);
 });
 
-outputEl.addEventListener("scroll", () => tooltip.classList.remove("show"), { passive: true });
-
-/* ================================================================
-   Direction toggle
-   ================================================================ */
 document.querySelectorAll(".dir-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".dir-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     direction = btn.getAttribute("data-dir");
-
-    if (direction === "uni2bi") {
-      inLabel.textContent  = "Unicode Input";
-      outLabel.textContent = "Bijoy Output";
-      inputEl.placeholder  = "এখানে বাংলা ইউনিকোড টেক্সট পেস্ট করুন…";
+    if(direction === "uni2bi") {
+      inLabel.textContent = "Unicode Input"; outLabel.textContent = "Bijoy Output";
+      inputEl.placeholder = "এখানে বাংলা ইউনিকোড টেক্সট পেস্ট করুন…";
     } else {
-      inLabel.textContent  = "Bijoy Input";
-      outLabel.textContent = "Unicode Output";
-      inputEl.placeholder  = "Paste Bijoy text here… (e.g. Avgiv m‡bvq evsjv)";
+      inLabel.textContent = "Bijoy Input"; outLabel.textContent = "Unicode Output";
+      inputEl.placeholder = "Paste Bijoy text here… (e.g. Avgiv m‡bvq evsjv)";
     }
-    tooltip.classList.remove("show");
-    render();
+    tooltip.classList.remove("show"); render();
   });
 });
 
-/* ================================================================
-   Spell-check buttons
-   ================================================================ */
-document.getElementById("lightBtn").addEventListener("click", () => {
-  spellMode = "light";
-  setActiveModeBtn("lightBtn");
-  if (!spellReady) {
-    showToast("Loading dictionary…");
-    loadDictionary();
-  } else {
-    updateDictStatus("ready");
-  }
+function setSpellMode(mode) {
+  spellMode = mode; lsSet(SPELL_MODE_KEY, mode); setActiveModeBtn(mode+"Btn");
+  if(mode==="off") updateDictStatus("off");
+  else if(spellReady) updateDictStatus("ready");
   render();
+}
+document.getElementById("lightBtn").addEventListener("click",()=>{setSpellMode("light");if(!spellReady)loadDictionary();});
+document.getElementById("deepBtn").addEventListener("click",()=>{setSpellMode("deep");loadDictionary();});
+document.getElementById("offBtn").addEventListener("click",()=>{setSpellMode("off");});
+function setActiveModeBtn(id) { ["lightBtn","deepBtn","offBtn"].forEach(bid=>{document.getElementById(bid).classList.toggle("on",bid===id);}); }
+
+/* Manual file input */
+const dictFileInput = document.getElementById("dictFileInput");
+document.getElementById("loadFileBtn").addEventListener("click", () => dictFileInput.click());
+dictFileInput.addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if(file) loadFromFile(file);
+  e.target.value = "";
 });
 
-document.getElementById("deepBtn").addEventListener("click", () => {
-  spellMode = "deep";
-  setActiveModeBtn("deepBtn");
-  loadDictionary();
-  render();
+document.getElementById("dictBtn").addEventListener("click",()=>{
+  const p = document.getElementById("dictPanel");
+  p.open = !p.open; if(p.open)p.scrollIntoView({behavior:"smooth",block:"start"});
 });
-
-document.getElementById("offBtn").addEventListener("click", () => {
-  spellMode = "off";
-  setActiveModeBtn("offBtn");
-  updateDictStatus("off");
-  render();
+document.getElementById("clearAllDictBtn").addEventListener("click",()=>{
+  if(userPairs.length===0){showToast("Already empty");return;}
+  if(!confirm("Remove all "+userPairs.length+" words?"))return;
+  userPairs=[];userDictUnicode.clear();userDictBijoy.clear();saveUserDict();
+  showToast("Cleared");updateDictStatus(spellMode==="off"?"off":"ready");render();renderDictList();
 });
-
-function setActiveModeBtn(id) {
-  ["lightBtn","deepBtn","offBtn"].forEach(bid => {
-    document.getElementById(bid).classList.toggle("on", bid === id);
-  });
+document.getElementById("clearBtn").addEventListener("click",()=>{inputEl.value="";render();inputEl.focus();});
+document.getElementById("copyInBtn").addEventListener("click",()=>copyText(inputEl.value,"Input copied ✓"));
+document.getElementById("copyOutBtn").addEventListener("click",()=>copyText(lastOutput,"Output copied ✓"));
+function copyText(text,msg){
+  if(!text){showToast("Nothing to copy");return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showToast(msg),()=>{legacyCopy(text);showToast(msg);});
+  } else { legacyCopy(text); showToast(msg); }
+}
+function legacyCopy(text){
+  const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");}catch(e){} document.body.removeChild(ta);
 }
 
-/* ================================================================
-   Copy / clear
-   ================================================================ */
-document.getElementById("clearBtn").addEventListener("click", () => {
-  inputEl.value = "";
-  render();
-  inputEl.focus();
-});
-
-document.getElementById("copyInBtn").addEventListener("click", () => {
-  copyText(inputEl.value, "Input copied ✓");
-});
-
-document.getElementById("copyOutBtn").addEventListener("click", () => {
-  copyText(lastOutput, "Output copied ✓");
-});
-
-function copyText(text, msg) {
-  if (!text) { showToast("Nothing to copy yet"); return; }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(
-      () => showToast(msg),
-      () => { legacyCopy(text); showToast(msg); }
-    );
-  } else {
-    legacyCopy(text); showToast(msg);
-  }
-}
-
-function legacyCopy(text) {
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand("copy"); } catch(e){}
-  document.body.removeChild(ta);
-}
-
-/* ================================================================
-   Input listeners
-   ================================================================ */
 inputEl.addEventListener("input", render);
 inputEl.addEventListener("paste", () => setTimeout(render, 0));
 
-/* ================================================================
-   Boot
-   ================================================================ */
-loadUserDict();
-setActiveModeBtn("offBtn");
-updateDictStatus("off");
+/* Boot */
+loadUserDict(); renderDictList();
+const savedMode = lsGet(SPELL_MODE_KEY, "off");
+spellMode = ["off","light","deep"].includes(savedMode) ? savedMode : "off";
+setActiveModeBtn(spellMode+"Btn");
+if(spellMode==="off") updateDictStatus("off");
+else { updateDictStatus("loading"); loadDictionary(); }
 render();
 </script>
 </body>
