@@ -187,18 +187,36 @@
     border-radius:6px;cursor:pointer;}
   .error-list .add-dict:hover{background:var(--accent);color:#fff;}
 
-  .ocr-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;
+  /* ============================================================
+     OCR modal — with crop tool
+     ============================================================ */
+  .ocr-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;
     align-items:center;justify-content:center;z-index:200;padding:16px;}
   .ocr-modal.show{display:flex;}
-  .ocr-card{background:var(--card);border-radius:16px;padding:26px;max-width:400px;width:100%;
-    text-align:center;box-shadow:0 24px 60px -20px rgba(0,0,0,.5);}
-  .ocr-title{font-size:1.05rem;font-weight:700;margin-bottom:8px;color:var(--ink);}
-  .ocr-status{font-size:.85rem;color:var(--muted);margin-bottom:14px;min-height:20px;}
-  .ocr-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:14px;}
+  .ocr-card{background:var(--card);border-radius:16px;padding:24px;max-width:620px;width:100%;
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.5);max-height:calc(100vh - 32px);overflow-y:auto;}
+  .ocr-title{font-size:1.05rem;font-weight:700;margin-bottom:4px;color:var(--ink);}
+  .ocr-subtitle{font-size:.78rem;color:var(--muted);margin-bottom:14px;}
+  .ocr-crop-wrap{position:relative;display:inline-block;margin:0 auto 14px;
+    border-radius:8px;overflow:hidden;max-width:100%;}
+  .ocr-crop-wrap.center-wrap{display:block;text-align:center;}
+  .ocr-crop-wrap img{max-width:100%;max-height:340px;display:inline-block;
+    border-radius:8px;user-select:none;-webkit-user-drag:none;cursor:crosshair;vertical-align:top;}
+  .ocr-crop-rect{position:absolute;border:2px dashed var(--accent);
+    background:rgba(47,107,255,.15);pointer-events:none;display:none;
+    border-radius:3px;box-shadow:0 0 0 9999px rgba(0,0,0,.35);}
+  .ocr-status{font-size:.85rem;color:var(--muted);margin-bottom:12px;min-height:22px;
+    text-align:center;font-family:Consolas,monospace;font-size:.8rem;}
+  .ocr-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:16px;}
   .ocr-bar-fill{height:100%;background:var(--accent);width:0;transition:width .3s;border-radius:3px;}
-  .ocr-hint{font-size:.75rem;color:var(--muted);}
-  .ocr-preview{max-width:100%;max-height:180px;border-radius:8px;margin-bottom:14px;
-    border:1px solid var(--line);object-fit:contain;}
+  .ocr-buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .ocr-buttons button{font:inherit;padding:9px 20px;border-radius:8px;border:0;
+    cursor:pointer;font-weight:600;font-size:.85rem;transition:.15s;}
+  .ocr-buttons .primary{background:var(--accent);color:#fff;}
+  .ocr-buttons .primary:hover{background:var(--accent-dark);}
+  .ocr-buttons .primary:disabled{opacity:.5;cursor:not-allowed;}
+  .ocr-buttons .ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .ocr-buttons .ghost:hover{border-color:var(--accent);}
 
   .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);
     background:#132033;color:#fff;padding:10px 22px;border-radius:99px;font-size:.85rem;
@@ -308,13 +326,24 @@
   <button type="button" id="addToDictBtn">Add both to dictionary</button>
 </div>
 
+<!-- OCR modal with crop tool -->
 <div class="ocr-modal" id="ocrModal">
   <div class="ocr-card">
-    <div class="ocr-title">Reading image…</div>
-    <img class="ocr-preview" id="ocrPreview" alt="">
-    <div class="ocr-status" id="ocrStatusText">Loading OCR engine…</div>
+    <div class="ocr-title" id="ocrTitle">Crop & recognize</div>
+    <div class="ocr-subtitle" id="ocrSubtitle">Drag on the image to crop the text area, or click Start to use the whole image.</div>
+    <div class="ocr-crop-wrap center-wrap" id="ocrCropWrap">
+      <div class="ocr-crop-wrap" style="position:relative;display:inline-block;">
+        <img id="ocrPreview" alt="OCR preview">
+        <div class="ocr-crop-rect" id="ocrCropRect"></div>
+      </div>
+    </div>
+    <div class="ocr-status" id="ocrStatusText">Ready</div>
     <div class="ocr-bar"><div class="ocr-bar-fill" id="ocrBarFill"></div></div>
-    <div class="ocr-hint">First run downloads the Bengali language model (~10 MB). 20–30 seconds.</div>
+    <div class="ocr-buttons">
+      <button id="ocrCancelBtn" class="ghost" type="button">Cancel</button>
+      <button id="ocrResetBtn" class="ghost" type="button">Reset crop</button>
+      <button id="ocrStartBtn" class="primary" type="button">Start OCR</button>
+    </div>
   </div>
 </div>
 
@@ -334,7 +363,7 @@ function lsGet(k, f) { try { const v = localStorage.getItem(k); return v === nul
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch(e){ return false; } }
 
 /* ================================================================
-   Service Worker registration
+   Service Worker
    ================================================================ */
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => {
@@ -840,7 +869,7 @@ addToDictBtn.addEventListener("click", ()=>{
 });
 
 /* ================================================================
-   Direction toggle — helper + buttons
+   Direction
    ================================================================ */
 function switchDirection(dir) {
   direction = dir;
@@ -877,13 +906,12 @@ document.getElementById("offBtn").addEventListener("click",()=>{setSpellMode("of
 function setActiveModeBtn(id) { ["lightBtn","deepBtn","offBtn"].forEach(bid=>{document.getElementById(bid).classList.toggle("on",bid===id);}); }
 
 /* ================================================================
-   Dictionary panel actions — Export / Import / Bulk / Clear
+   Dictionary panel
    ================================================================ */
 document.getElementById("dictBtn").addEventListener("click",()=>{
   const p = document.getElementById("dictPanel");
   p.open = !p.open; if(p.open)p.scrollIntoView({behavior:"smooth",block:"start"});
 });
-
 document.getElementById("clearAllDictBtn").addEventListener("click",()=>{
   if(userPairs.length===0){showToast("Already empty");return;}
   if(!confirm("Remove all "+userPairs.length+" words?"))return;
@@ -891,7 +919,6 @@ document.getElementById("clearAllDictBtn").addEventListener("click",()=>{
   showToast("Cleared");updateDictStatus(spellMode==="off"?"off":"ready");render();renderDictList();
 });
 
-/* Export */
 document.getElementById("exportDictBtn").addEventListener("click",()=>{
   if(userPairs.length===0){showToast("Dictionary is empty");return;}
   const blob = new Blob([JSON.stringify(userPairs, null, 2)], {type:"application/json"});
@@ -905,7 +932,6 @@ document.getElementById("exportDictBtn").addEventListener("click",()=>{
   showToast("Exported " + userPairs.length + " words");
 });
 
-/* Import */
 const importDictFile = document.getElementById("importDictFile");
 document.getElementById("importDictBtn").addEventListener("click",()=>importDictFile.click());
 importDictFile.addEventListener("change", async (e)=>{
@@ -931,7 +957,6 @@ importDictFile.addEventListener("change", async (e)=>{
   }
 });
 
-/* Bulk Add */
 const bulkArea = document.getElementById("bulkArea");
 const bulkInput = document.getElementById("bulkInput");
 document.getElementById("bulkToggleBtn").addEventListener("click",()=>{
@@ -957,7 +982,7 @@ document.getElementById("bulkCommitBtn").addEventListener("click",()=>{
     }
   });
   bulkInput.value = "";
-  showToast(`Added ${added}, skipped ${skipped}${badLines?" · "+badLines+" bad lines":""}`);
+  showToast(`Added ${added}, skipped ${skipped}${badLines?" · "+badLines+" bad":""}`);
   updateDictStatus(spellMode==="off"?"off":"ready");
   render(); renderDictList();
 });
@@ -989,14 +1014,45 @@ function scheduleSave() {
 }
 
 /* ================================================================
-   OCR — Tesseract.js
+   OCR — with all 5 improvements
+   ================================================================
+   1. tessdata_best model (better accuracy)
+   2. Multi-PSM (3 + 6) scored by dictionary match
+   3. Upscale + Otsu threshold preprocessing
+   4. Dictionary-based post-correction with confusion matrix
+   5. Drag-to-crop UI
    ================================================================ */
+
+/* Bengali character confusion pairs — used by post-correction.
+   Only single-character substitutions are attempted, and only if the
+   resulting word is in the dictionary AND the original word is not. */
+const BENGALI_CONFUSIONS = {
+  "ব": ["র"], "র": ["ব"],
+  "ড": ["ড়"], "ড়": ["ড"],
+  "ঢ": ["ঢ়"], "ঢ়": ["ঢ"],
+  "ি": ["ী"], "ী": ["ি"],
+  "ু": ["ূ"], "ূ": ["ু"],
+  "ে": ["ৈ"], "ৈ": ["ে"],
+  "০": ["ো"], "ো": ["০"],
+  "১": ["১"], /* placeholder, no-op */
+  "ং": ["ঃ"], "ঃ": ["ং"]
+};
+
+/* Tesseract PSM codes to try. Auto(3) and Single Block(6) cover 95% of cases. */
+const OCR_PSMS = ["3", "6"];
+
 const ocrBtn = document.getElementById("ocrBtn");
 const ocrFileInput = document.getElementById("ocrFileInput");
 const ocrModal = document.getElementById("ocrModal");
+const ocrTitle = document.getElementById("ocrTitle");
+const ocrSubtitle = document.getElementById("ocrSubtitle");
 const ocrStatusText = document.getElementById("ocrStatusText");
 const ocrBarFill = document.getElementById("ocrBarFill");
 const ocrPreview = document.getElementById("ocrPreview");
+const ocrCropRect = document.getElementById("ocrCropRect");
+const ocrStartBtn = document.getElementById("ocrStartBtn");
+const ocrResetBtn = document.getElementById("ocrResetBtn");
+const ocrCancelBtn = document.getElementById("ocrCancelBtn");
 
 let tesseractLoaded = null;
 function loadTesseract() {
@@ -1011,61 +1067,343 @@ function loadTesseract() {
   return tesseractLoaded;
 }
 
+/* --- Crop state --- */
+let cropStart = null;   // { x, y } in display coords
+let cropRect = null;    // { x, y, w, h } in display coords
+let currentFile = null;
+let currentImgURL = null;
+let ocrBusy = false;
+
+function resetCrop() {
+  cropStart = null;
+  cropRect = null;
+  ocrCropRect.style.display = "none";
+}
+
+function updateCropOverlay() {
+  if (!cropRect || cropRect.w < 12 || cropRect.h < 12) {
+    ocrCropRect.style.display = "none";
+    return;
+  }
+  const imgRect = ocrPreview.getBoundingClientRect();
+  const parentRect = ocrPreview.parentElement.getBoundingClientRect();
+  ocrCropRect.style.display = "block";
+  ocrCropRect.style.left = (imgRect.left - parentRect.left + cropRect.x) + "px";
+  ocrCropRect.style.top  = (imgRect.top  - parentRect.top  + cropRect.y) + "px";
+  ocrCropRect.style.width  = cropRect.w + "px";
+  ocrCropRect.style.height = cropRect.h + "px";
+}
+
+function handleCropStart(clientX, clientY) {
+  if (ocrBusy) return;
+  const r = ocrPreview.getBoundingClientRect();
+  cropStart = {
+    x: Math.max(0, Math.min(r.width,  clientX - r.left)),
+    y: Math.max(0, Math.min(r.height, clientY - r.top))
+  };
+}
+
+function handleCropMove(clientX, clientY) {
+  if (!cropStart) return;
+  const r = ocrPreview.getBoundingClientRect();
+  const x = Math.max(0, Math.min(r.width,  clientX - r.left));
+  const y = Math.max(0, Math.min(r.height, clientY - r.top));
+  cropRect = {
+    x: Math.min(cropStart.x, x),
+    y: Math.min(cropStart.y, y),
+    w: Math.abs(x - cropStart.x),
+    h: Math.abs(y - cropStart.y)
+  };
+  updateCropOverlay();
+}
+
+function handleCropEnd() {
+  cropStart = null;
+}
+
+ocrPreview.addEventListener("mousedown", e => { e.preventDefault(); handleCropStart(e.clientX, e.clientY); });
+document.addEventListener("mousemove", e => { if (cropStart) { e.preventDefault(); handleCropMove(e.clientX, e.clientY); } });
+document.addEventListener("mouseup", handleCropEnd);
+
+ocrPreview.addEventListener("touchstart", e => {
+  if (e.touches.length === 1) handleCropStart(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+ocrPreview.addEventListener("touchmove", e => {
+  if (e.touches.length === 1 && cropStart) { e.preventDefault(); handleCropMove(e.touches[0].clientX, e.touches[0].clientY); }
+}, { passive: false });
+ocrPreview.addEventListener("touchend", handleCropEnd);
+
+ocrResetBtn.addEventListener("click", resetCrop);
+
 ocrBtn.addEventListener("click", () => ocrFileInput.click());
 
-ocrFileInput.addEventListener("change", async (e) => {
+ocrFileInput.addEventListener("change", (e) => {
   const file = e.target.files && e.target.files[0];
   e.target.value = "";
   if (!file) return;
 
-  const imgURL = URL.createObjectURL(file);
-  ocrPreview.src = imgURL;
+  if (currentImgURL) URL.revokeObjectURL(currentImgURL);
+  currentFile = file;
+  currentImgURL = URL.createObjectURL(file);
+  ocrPreview.src = currentImgURL;
+  resetCrop();
+
+  ocrTitle.textContent = "Crop & recognize";
+  ocrSubtitle.textContent = "Drag on the image to crop the text area, or click Start to use the whole image.";
+  ocrStatusText.textContent = "Ready";
   ocrBarFill.style.width = "0%";
-  ocrStatusText.textContent = "Loading OCR engine…";
+  ocrStartBtn.disabled = false;
+  ocrStartBtn.textContent = "Start OCR";
+  ocrBusy = false;
+
   ocrModal.classList.add("show");
+});
+
+ocrCancelBtn.addEventListener("click", () => {
+  if (ocrBusy) return;
+  ocrModal.classList.remove("show");
+  resetCrop();
+  if (currentImgURL) { URL.revokeObjectURL(currentImgURL); currentImgURL = null; }
+});
+
+/* ================================================================
+   Preprocessing — upscale + grayscale + Otsu threshold
+   ================================================================ */
+function preprocessToCanvas(imgEl) {
+  const crop = cropRect;
+  const displayW = imgEl.clientWidth;
+  const displayH = imgEl.clientHeight;
+  const scaleX = imgEl.naturalWidth / displayW;
+  const scaleY = imgEl.naturalHeight / displayH;
+
+  /* Source rectangle in original image coords */
+  let sx = 0, sy = 0, sw = imgEl.naturalWidth, sh = imgEl.naturalHeight;
+  if (crop && crop.w > 10 && crop.h > 10) {
+    sx = Math.round(crop.x * scaleX);
+    sy = Math.round(crop.y * scaleY);
+    sw = Math.round(crop.w * scaleX);
+    sh = Math.round(crop.h * scaleY);
+  }
+
+  /* Upscale to at least 1800px wide (Tesseract works best on high-res) */
+  const targetW = Math.max(1800, sw);
+  const scale = targetW / sw;
+  const outW = Math.round(sw * scale);
+  const outH = Math.round(sh * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(imgEl, sx, sy, sw, sh, 0, 0, outW, outH);
+
+  /* Grayscale + Otsu threshold */
+  const imageData = ctx.getImageData(0, 0, outW, outH);
+  const data = imageData.data;
+  const hist = new Uint32Array(256);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const g = Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+    data[i] = data[i+1] = data[i+2] = g;
+    hist[g]++;
+  }
+
+  /* Otsu's method */
+  const total = outW * outH;
+  let sum = 0;
+  for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+  for (let i = 0; i < 256; i++) {
+    wB += hist[i];
+    if (wB === 0) continue;
+    const wF = total - wB;
+    if (wF === 0) break;
+    sumB += i * hist[i];
+    const mB = sumB / wB;
+    const mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > maxVar) { maxVar = between; threshold = i; }
+  }
+
+  /* Detect inverted images (dark background, light text) */
+  let dark = 0, light = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] < threshold) dark++; else light++;
+  }
+  const inverted = dark > light; /* mostly dark = inverted */
+
+  for (let i = 0; i < data.length; i += 4) {
+    let v = data[i] > threshold ? 255 : 0;
+    if (inverted) v = 255 - v;
+    data[i] = data[i+1] = data[i+2] = v;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return canvas;
+}
+
+/* ================================================================
+   Multi-PSM recognition scored by dictionary match
+   ================================================================ */
+function scoreTextByDictionary(text) {
+  if (!wordSet) return 0;
+  const words = text.match(/[\u0980-\u09FF]+/g) || [];
+  if (words.length === 0) return 0;
+  let matches = 0;
+  for (const w of words) {
+    if (isKnownWord(w)) matches++;
+  }
+  return matches / words.length;
+}
+
+async function recognizeMultiPSM(worker, canvas, onProgress) {
+  const results = [];
+  for (let i = 0; i < OCR_PSMS.length; i++) {
+    const psm = OCR_PSMS[i];
+    onProgress(`Pass ${i+1}/${OCR_PSMS.length} (PSM ${psm})…`, (i / OCR_PSMS.length) * 100);
+    await worker.setParameters({
+      tessedit_pageseg_mode: psm,
+      preserve_interword_spaces: "1"
+    });
+    const { data } = await worker.recognize(canvas);
+    const score = scoreTextByDictionary(data.text || "");
+    results.push({ psm, text: data.text || "", score });
+  }
+  results.sort((a, b) => b.score - a.score);
+  return results[0];
+}
+
+/* ================================================================
+   Dictionary-based post-correction (Bengali confusion matrix)
+   ================================================================ */
+function correctWord(word) {
+  if (!word || word.length < 2) return word;
+  if (!wordSet) return word;
+  if (isKnownWord(word)) return word;
+
+  const chars = [...word];
+  const candidates = [];
+
+  for (let i = 0; i < chars.length; i++) {
+    const subs = BENGALI_CONFUSIONS[chars[i]];
+    if (!subs) continue;
+    for (const sub of subs) {
+      if (sub === chars[i]) continue;
+      const candidate = chars.slice(0, i).join("") + sub + chars.slice(i + 1).join("");
+      if (candidate !== word && isKnownWord(candidate)) {
+        candidates.push(candidate);
+      }
+    }
+  }
+
+  /* Only apply if exactly one unique fix exists */
+  const unique = [...new Set(candidates)];
+  if (unique.length === 1) return unique[0];
+  return word;
+}
+
+function postCorrectText(text) {
+  if (!wordSet || !text) return text;
+  let corrections = 0;
+  const corrected = text.replace(/[\u0980-\u09FF]+/g, (match) => {
+    const fixed = correctWord(match);
+    if (fixed !== match) corrections++;
+    return fixed;
+  });
+  return { text: corrected, corrections };
+}
+
+/* ================================================================
+   OCR run — main flow
+   ================================================================ */
+ocrStartBtn.addEventListener("click", async () => {
+  if (ocrBusy || !ocrPreview.complete || !ocrPreview.naturalWidth) return;
+  ocrBusy = true;
+  ocrStartBtn.disabled = true;
+  ocrStartBtn.textContent = "Working…";
 
   try {
-    const Tesseract = await loadTesseract();
-    ocrStatusText.textContent = "Initializing…";
+    /* Step 1 — preprocess */
+    ocrStatusText.textContent = "Preprocessing image…";
+    ocrBarFill.style.width = "5%";
+    await new Promise(r => setTimeout(r, 50)); /* let UI paint */
+    const canvas = preprocessToCanvas(ocrPreview);
 
+    /* Step 2 — load Tesseract */
+    ocrStatusText.textContent = "Loading OCR engine…";
+    ocrBarFill.style.width = "10%";
+    const Tesseract = await loadTesseract();
+
+    /* Step 3 — create worker (uses tessdata_best for accuracy) */
+    ocrStatusText.textContent = "Loading Bengali model (~15 MB)…";
+    ocrBarFill.style.width = "15%";
     const worker = await Tesseract.createWorker("ben", 1, {
+      langPath: "https://tessdata.projectnaptha.com/4.0.0_best",
       logger: (m) => {
-        if (m.status) {
+        if (m.status === "loading language traineddata") {
           const pct = Math.round((m.progress || 0) * 100);
-          ocrStatusText.textContent = m.status + (pct > 0 ? " — " + pct + "%" : "");
-          if (m.status === "recognizing text") ocrBarFill.style.width = pct + "%";
+          ocrStatusText.textContent = `Loading model… ${pct}%`;
+          ocrBarFill.style.width = (15 + pct * 0.25) + "%";
         }
       }
     });
 
-    const { data: { text } } = await worker.recognize(file);
+    /* Step 4 — multi-PSM recognition */
+    const best = await recognizeMultiPSM(worker, canvas, (msg, pct) => {
+      ocrStatusText.textContent = msg;
+      ocrBarFill.style.width = (40 + pct * 0.45) + "%";
+    });
     await worker.terminate();
-    URL.revokeObjectURL(imgURL);
 
-    if (!text || !text.trim()) {
+    /* Step 5 — post-correction */
+    ocrBarFill.style.width = "90%";
+    ocrStatusText.textContent = "Correcting with dictionary…";
+    await new Promise(r => setTimeout(r, 30));
+
+    const rawText = (best.text || "").trim();
+    if (!rawText) {
       ocrStatusText.textContent = "No text detected in image";
-      setTimeout(() => ocrModal.classList.remove("show"), 1800);
+      ocrBarFill.style.width = "100%";
+      ocrStartBtn.textContent = "Try again";
+      ocrStartBtn.disabled = false;
+      ocrBusy = false;
       return;
     }
 
-    /* OCR always produces Unicode Bengali (Tesseract's Bengali model).
-       If we're in bi2uni mode, force-switch to uni2bi. */
+    const corrected = postCorrectText(rawText);
+    const finalText = corrected.text.trim();
+
+    /* Step 6 — populate input */
+    ocrBarFill.style.width = "100%";
+    ocrStatusText.textContent =
+      `Done · PSM ${best.psm} won · ${corrected.corrections} word${corrected.corrections === 1 ? "" : "s"} corrected`;
+
+    /* OCR gives Unicode — switch direction if needed */
     if (direction === "bi2uni") {
       switchDirection("uni2bi");
       showToast("OCR gives Unicode — switched to Unicode → Bijoy");
     }
 
-    inputEl.value = text.trim();
-    lsSet(INPUT_KEY, inputEl.value);
+    inputEl.value = finalText;
+    lsSet(INPUT_KEY, finalText);
     render();
-    ocrStatusText.textContent = "Done!";
-    ocrBarFill.style.width = "100%";
-    setTimeout(() => ocrModal.classList.remove("show"), 600);
-    showToast("Extracted " + text.trim().length + " chars");
+
+    /* Auto-close after a moment */
+    setTimeout(() => {
+      ocrModal.classList.remove("show");
+      resetCrop();
+      if (currentImgURL) { URL.revokeObjectURL(currentImgURL); currentImgURL = null; }
+      showToast(`OCR done · ${corrected.corrections} corrected`);
+    }, 900);
+
   } catch (err) {
     console.error(err);
     ocrStatusText.textContent = "OCR failed: " + err.message;
-    setTimeout(() => ocrModal.classList.remove("show"), 2500);
+    ocrStartBtn.textContent = "Try again";
+    ocrStartBtn.disabled = false;
+    ocrBusy = false;
     showToast("OCR failed");
   }
 });
@@ -1074,7 +1412,6 @@ ocrFileInput.addEventListener("change", async (e) => {
    Keyboard shortcuts
    ================================================================ */
 document.addEventListener("keydown", (e) => {
-  /* don't hijack typing inside textareas except for Ctrl-combos */
   const inField = /^(INPUT|TEXTAREA)$/.test(e.target.tagName);
 
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
@@ -1084,8 +1421,12 @@ document.addEventListener("keydown", (e) => {
     if (spellMode === "deep") setSpellMode("off");
     else { setSpellMode("deep"); loadDictionary(); }
   } else if (e.key === "Escape") {
+    if (ocrModal.classList.contains("show") && !ocrBusy) {
+      ocrModal.classList.remove("show");
+      resetCrop();
+      if (currentImgURL) { URL.revokeObjectURL(currentImgURL); currentImgURL = null; }
+    }
     tooltip.classList.remove("show");
-    ocrModal.classList.remove("show");
   } else if (e.ctrlKey && e.key === "Enter" && !inField) {
     e.preventDefault(); render();
   }
@@ -1107,11 +1448,7 @@ const savedInput = lsGet(INPUT_KEY, "");
 if (savedInput) inputEl.value = savedInput;
 
 const savedDir = lsGet(DIRECTION_KEY, "uni2bi");
-if (savedDir === "bi2uni") {
-  switchDirection("bi2uni");
-} else {
-  switchDirection("uni2bi");
-}
+switchDirection(savedDir === "bi2uni" ? "bi2uni" : "uni2bi");
 
 const savedMode = lsGet(SPELL_MODE_KEY, "off");
 spellMode = ["off","light","deep"].includes(savedMode) ? savedMode : "off";
